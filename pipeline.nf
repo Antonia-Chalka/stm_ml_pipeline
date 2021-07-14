@@ -101,3 +101,18 @@ process amrfinder {
 amr_single_ch
     .collectFile(keepHeader:true, skip:1, name:"amr_all.tsv", storeDir:"${params.outdir}/amr_out")
 
+// roary
+process roary {
+    publishDir  "${params.outdir}", mode: 'copy', overwrite: true
+
+    input:
+    file annotations from annotation_roary.collect()
+
+    output:
+    file "roary_out/" into roary_dir_ch
+
+    script:
+    """
+    roary -v -s -f "roary_out" ${annotations}
+    """
+}
