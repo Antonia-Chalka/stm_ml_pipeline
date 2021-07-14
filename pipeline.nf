@@ -1,9 +1,9 @@
 #!/usr/bin/env nextflow
 
 // Required params - defaults to testing data
-params.hostdata = "$baseDir/input_test/metadata.csv"
-params.outdir = "$baseDir/out"
-
+params.hostdata = "$projectDir/input_test/metadata.csv"
+params.outdir = "$projectDir/out"
+params.assemblypath = "$projectDir/input_test/"
 assemblies = Channel.fromPath("${params.assemblypath}/*.fasta")
 
 // Assembly quality thresholds
@@ -16,7 +16,10 @@ params.gc_upr = 54
 params.gc_lwr = 50
 
 // Prokka reference file - required
-params.prokka_ref="$baseDir/data/stm_proteinref.fasta"
+params.prokka_ref="$projectDir/data/stm_proteinref.fasta"
+
+// AMRfinder parameters
+params.amr_species='Salmonella'
 
 // Run Quast
 process assembly_qc {
@@ -64,10 +67,37 @@ process prokka_annotation {
     file good_qc_assembly from good_assemblies.flatten()
 
     output:
-    file "${good_qc_assembly.baseName}/*gff" into annotation_ch
+    file "${good_qc_assembly.baseName}/${good_qc_assembly.baseName}.gff" into annotation_ch
+    file "${good_qc_assembly.baseName}/${good_qc_assembly.baseName}.faa" into trans_protein_ch
+    file "${good_qc_assembly.baseName}/${good_qc_assembly.baseName}.fna" into nucleotide_ch
 
     script:
     """
     prokka --prefix "${good_qc_assembly.baseName}" --force --proteins ${params.prokka_ref} --centre X --compliant ${good_qc_assembly}
     """
 }
+
+annotation_ch.into { annotation_amrfinder; annotation_roary; annotation_piggy; annotation_panaroo }
+
+process amrfinder {
+
+    input:
+    file annotation from annotation_amrfinder
+    file trans_protein from trans_protein_ch
+    file nucleotide from nucleotide_ch
+
+    output:
+    file "${annotation.baseName}_amr.tsv" into amr_single_ch
+
+    script:
+    """
+    perl -pe '/^##FASTA/ && exit; s/(\\W)Name=/\$1OldName=/i; s/ID=([^;]+)/ID=\$1;Name=\$1/' $annotation  > amrfinder.gff
+
+    amrfinder -p ${trans_protein} -g amrfinder.gff -n ${nucleotide} -O ${params.amr_species} -o "${annotation.baseName}_amr.tsv" --name --plus
+    """
+}
+
+// collate amr files
+amr_single_ch
+    .collectFile(keepHeader:true, skip:1, name:"amr_all.tsv", storeDir:"${params.outdir}/amr_out")
+
