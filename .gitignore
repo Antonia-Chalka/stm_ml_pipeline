@@ -1,3 +1,5 @@
 work/*
 .nextflow.log*
 .nextflow/*
+out/*
+scripts/*
