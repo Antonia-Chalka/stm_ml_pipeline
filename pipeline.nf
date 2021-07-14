@@ -29,7 +29,7 @@ process assembly_qc {
 }
 
 process printqc {
-    publishDir  path: "${params.outdir}/qc_report", mode: 'copy', overwrite: true
+    publishDir  "${params.outdir}/qc_report", mode: 'copy', overwrite: true
 
     input:
     file qcs from quast_ch.collectFile(keepHeader:true, skip:1)
@@ -41,7 +41,7 @@ process printqc {
     """
     awk -F "\t" '{ if((\$2 < $params.ctg_count) && (\$8 > $params.as_ln_lwr && \$8 < $params.as_ln_upr) && (\$15 > $params.largest_ctg) && (\$17 > $params.gc_lwr && \$17 < $params.gc_upr) && (\$18 > $params.n50)) { print } }' $qcs > pass_qc.tsv
 
-    mkdir ${params.outdir}/good_assemblies/
+    mkdir ${params.outdir}good_assemblies/ -p
     
     for assembly_name in `cut -f1 pass_qc.tsv`
     do 
