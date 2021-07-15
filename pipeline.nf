@@ -116,3 +116,20 @@ process roary {
     roary -v -s -f "roary_out" ${annotations}
     """
 }
+
+process piggy {
+    publishDir  "${params.outdir}", mode: 'copy', overwrite: true
+
+    input:
+    file annotations from annotation_piggy.collect()
+    file roary_dir from roary_dir_ch
+
+    output:
+    file "./piggy_out/IGR_presence_absence.csv" into piggy_igr_ch
+
+    script:
+    """
+    piggy -r "${roary_dir}" -i .
+    """
+}
+
