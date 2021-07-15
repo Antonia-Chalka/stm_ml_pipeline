@@ -16,10 +16,15 @@ params.gc_upr = 54
 params.gc_lwr = 50
 
 // Prokka reference file - required
-params.prokka_ref="$projectDir/data/stm_proteinref.fasta"
+params.prokka_ref = "$projectDir/data/stm_proteinref.fasta"
+prokka_ref_file = file(params.prokka_ref)
 
 // AMRfinder parameters
 params.amr_species='Salmonella'
+
+// Snippy parameters
+params.snp_ref = "$projectDir/data/stm_sl1344.fasta"
+snp_ref_file = file(params.snp_ref)
 
 // Run Quast
 process assembly_qc {
@@ -53,18 +58,20 @@ process printqc {
 
     for assembly_name in `cut -f1 pass_qc.tsv`
     do 
-        echo \$assembly_name
         ln -s ${params.assemblypath}/\${assembly_name}.fasta ./\${assembly_name}.fasta 
     done
     """
 }
+
+good_assemblies.into {assemblies_prokka; assemblies_snippy}
 
 // Annotate via prokka. Reference protein file required
 process prokka_annotation {
     publishDir  "${params.outdir}/annotation", mode: 'copy', overwrite: true
 
     input:
-    file good_qc_assembly from good_assemblies.flatten()
+    file good_qc_assembly from assemblies_prokka.flatten()
+    file prokka_ref_file
 
     output:
     file "${good_qc_assembly.baseName}/${good_qc_assembly.baseName}.gff" into annotation_ch
@@ -73,7 +80,7 @@ process prokka_annotation {
 
     script:
     """
-    prokka --prefix "${good_qc_assembly.baseName}" --force --proteins ${params.prokka_ref} --centre X --compliant ${good_qc_assembly}
+    prokka --prefix "${good_qc_assembly.baseName}" --force --proteins ${prokka_ref_file} --centre X --compliant ${good_qc_assembly}
     """
 }
 
@@ -133,3 +140,37 @@ process piggy {
     """
 }
 
+// scoary filtering - need to make host score data (Assembly,bovine,human,poultry,swine) via r script
+
+// panaroo - do qc script as well?
+
+// scoary
+
+// snippy
+process snippy {
+    input:
+    file assembly from assemblies_snippy.flatten()
+    file snp_ref_file
+
+    output:
+    file "./${assembly.baseName}/" into snippy_folders_ch
+
+    script:
+    """
+    snippy --prefix "${assembly.baseName}" --outdir "${assembly.baseName}" --ref  "${snp_ref_file}" --ctgs "${assembly}" --force
+    """
+}
+
+process snippy_core {
+    input:
+    file snippy_folders from snippy_folders_ch.collect()
+    file snp_ref_file
+
+    output:
+    file 'core.tab' into snps_ch
+
+    script:
+    """
+    snippy-core --prefix core --ref "${snp_ref_file}" ${snippy_folders}
+    """
+}
