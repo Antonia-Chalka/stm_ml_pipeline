@@ -22,6 +22,9 @@ prokka_ref_file = file(params.prokka_ref)
 // AMRfinder parameters
 params.amr_species='Salmonella'
 
+// Panaroo parameters
+params.panaroo_mode = 'moderate'
+
 // Snippy parameters
 params.snp_ref = "$projectDir/data/stm_sl1344.fasta"
 snp_ref_file = file(params.snp_ref)
@@ -143,6 +146,18 @@ process piggy {
 // scoary filtering - need to make host score data (Assembly,bovine,human,poultry,swine) via r script
 
 // panaroo - do qc script as well?
+process panaroo {
+    input:
+    file annotations from annotation_panaroo.collect()
+
+    output:
+    file "panaroo_out/" into panaroo_dir_ch
+
+    script:
+    """
+    panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate
+    """
+}
 
 // scoary
 
