@@ -2,7 +2,13 @@
 
 // Required params - defaults to testing data
 params.hostdata = "$projectDir/input_test/metadata.csv"
+metadata_file = file(params.hostdata)
+params.assembly_column="Filename"
+params.host_column="Source.Host"
+params.fileextension=".fasta"
+
 params.outdir = "$projectDir/out"
+
 params.assemblypath = "$projectDir/input_test/"
 assemblies = Channel.fromPath("${params.assemblypath}/*.fasta")
 
@@ -28,6 +34,9 @@ params.panaroo_mode = 'moderate'
 // Snippy parameters
 params.snp_ref = "$projectDir/data/stm_sl1344.fasta"
 snp_ref_file = file(params.snp_ref)
+
+// Scoary hostfile script
+scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
 
 // Run Quast
 process assembly_qc {
@@ -143,7 +152,21 @@ process piggy {
     """
 }
 
-// scoary filtering - need to make host score data (Assembly,bovine,human,poultry,swine) via r script
+// scoary filtering - make traitfile(Assembly,[Hosts]]) via r script
+// TODO move scoary datagen script elsewehere?
+process gen_scoary_traitfile {
+    input:
+    file metadata_file
+    file scoary_datagen_file
+
+    output:
+    file "./scoary_traitfile.csv" into scoary_traitfile_ch
+
+    script:
+    """
+    Rscript --vanilla ${scoary_datagen_file} $metadata_file $params.assembly_column $params.host_column $params.fileextension
+    """
+}
 
 // panaroo - do qc script as well?
 process panaroo {
@@ -160,6 +183,8 @@ process panaroo {
 }
 
 // scoary
+// 
+
 
 // snippy
 process snippy {
