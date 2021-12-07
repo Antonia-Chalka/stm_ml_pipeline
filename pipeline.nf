@@ -7,10 +7,10 @@ params.hostdata = "$projectDir/input_test/metadata.csv"
 
 params.assembly_column="Filename"
 params.host_column="Source.Host"
-params.fileextension=".fasta"
+params.fileextension="fasta"
 
 metadata_file = file(params.hostdata)
-assemblies = Channel.fromPath("${params.assemblypath}/*.fasta")
+assemblies = Channel.fromPath("${params.assemblypath}/*.${params.fileextension}")
 
 // Assembly quality thresholds
 params.as_ln_upr = 6000000
@@ -22,7 +22,7 @@ params.gc_upr = 54
 params.gc_lwr = 50
 
 // Computing parameters
-params.threads = 2
+params.threads = 5
 
 // Prokka reference file - required
 params.prokka_ref = "$projectDir/data/stm_proteinref.fasta"
@@ -65,14 +65,14 @@ process assembly_qc {
 
 // Filter assemblies based on quast-derived metrics
 process printqc {
-    publishDir  "${params.outdir}/good_assemblies", mode: 'copy', overwrite: true, pattern : '*.fasta'
+    publishDir  "${params.outdir}/good_assemblies", mode: 'copy', overwrite: true, pattern : '*.${params.fileextension}'
 
     input:
     file qcs from quast_ch.collectFile(keepHeader:true, skip:1)
     file metadata_file
 
     output:
-    file '*.fasta' into good_assemblies
+    file '*.${params.fileextension}' into good_assemblies
     file 'good_metadata.csv' into good_metadata
 
     script:
@@ -83,11 +83,11 @@ process printqc {
     # Copy asseblies that pass qc
     for assembly_name in `cut -f1 pass_qc.tsv`
     do 
-        ln -s ${params.assemblypath}/\${assembly_name}.fasta ./\${assembly_name}.fasta 
+        ln -s ${params.assemblypath}/\${assembly_name}.${params.fileextension} ./\${assembly_name}.${params.fileextension} 
     done
 
     # Create list from good assemblies & create a new metadata file of the filtered results
-    ls *.fasta > good_assemblies.txt
+    ls *.${params.fileextension} > good_assemblies.txt
     awk -F',' 'NR==FNR{c[\$1]++;next};c[\$1] > 0' good_assemblies.txt $metadata_file > good_metadata.csv
 
     # Add headers to new metadata file by copying the first line of the orginal metadata file
@@ -165,7 +165,7 @@ process piggy {
 
     script:
     """
-    piggy -r "${roary_dir}" -i .
+    piggy -r "${roary_dir}" -i . -t $params.threads
     """
 }
 
@@ -272,6 +272,7 @@ process snippy_core {
 }
 
 // TODO Add Data prep for model generation
+/*
 process amr_process {
     publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true
 
@@ -288,6 +289,7 @@ process amr_process {
     
     """
 }
+*/
 
 // .collectFile(keepHeader:true, skip:1, name:"amr_all.tsv", storeDir:"${params.outdir}/amr_out")
 // TODO Add basic model generation

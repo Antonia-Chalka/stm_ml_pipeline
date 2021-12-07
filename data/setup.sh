@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Get Java
+sudo apt-get install openjdk-8-jdk
+
+# Install nextflow (& move to path)
+wget -qO- https://get.nextflow.io | bash
+chmod +x nextflow
+sudo mv nextflow /usr/bin/nextflow
+
+# pull docker images
 docker pull staphb/quast:5.0.2
 docker pull staphb/prokka:1.14.5
 docker pull staphb/ncbi-amrfinderplus:3.10.5
