@@ -1,11 +1,12 @@
 library(tidyverse)
 library(data.table)
+set.seed(100)
 
 args = commandArgs(trailingOnly=TRUE)
-# test if there is at least 2 argumentS: if not, return an error
+# test if there is at least 4 argumentS: if not, return an error
 if (length(args)!=4) {
   length(args)
-  stop("At least one argument must be supplied (input file).n", call.=FALSE)
+  stop("Exactly 4 argument must be supplied (input file).n", call.=FALSE)
 } 
 
 scoary_data <- read.csv(args[1]) %>% 

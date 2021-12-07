@@ -1,15 +1,15 @@
 #!/usr/bin/env nextflow
 
 // Required params - defaults to testing data
+params.outdir = "$projectDir/out"
+params.assemblypath = "$projectDir/input_test/"
 params.hostdata = "$projectDir/input_test/metadata.csv"
-metadata_file = file(params.hostdata)
+
 params.assembly_column="Filename"
 params.host_column="Source.Host"
 params.fileextension=".fasta"
 
-params.outdir = "$projectDir/out"
-
-params.assemblypath = "$projectDir/input_test/"
+metadata_file = file(params.hostdata)
 assemblies = Channel.fromPath("${params.assemblypath}/*.fasta")
 
 // Assembly quality thresholds
@@ -20,6 +20,9 @@ params.largest_ctg = 100000
 params.n50 = 50000
 params.gc_upr = 54
 params.gc_lwr = 50
+
+// Computing parameters
+params.threads = 2
 
 // Prokka reference file - required
 params.prokka_ref = "$projectDir/data/stm_proteinref.fasta"
@@ -38,9 +41,16 @@ snp_ref_file = file(params.snp_ref)
 // Scoary hostfile script
 scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
 
+// R scripts for model input processing
+amr_process_file=file("$projectDir/data/input_amr.R")
+pv_process_file=file("$projectDir/data/input_pv.R")
+igr_process_file=file("$projectDir/data/input_igr.R")
+snps_process_file=file("$projectDir/data/input_snps.R")
+
 // Run Quast
 process assembly_qc {
-    
+    publishDir  "${params.outdir}/qc_report", mode: 'copy', overwrite: true
+
     input:
     file assembly from assemblies
 
@@ -55,27 +65,38 @@ process assembly_qc {
 
 // Filter assemblies based on quast-derived metrics
 process printqc {
-    publishDir  "${params.outdir}/qc_report", mode: 'copy', overwrite: true, pattern : 'pass_qc.tsv'
     publishDir  "${params.outdir}/good_assemblies", mode: 'copy', overwrite: true, pattern : '*.fasta'
 
     input:
     file qcs from quast_ch.collectFile(keepHeader:true, skip:1)
+    file metadata_file
 
     output:
     file '*.fasta' into good_assemblies
+    file 'good_metadata.csv' into good_metadata
 
     script:
     """
+    # Create list of assemlies that pass qc
     awk -F "\t" '{ if((\$2 < $params.ctg_count) && (\$8 > $params.as_ln_lwr && \$8 < $params.as_ln_upr) && (\$15 > $params.largest_ctg) && (\$17 > $params.gc_lwr && \$17 < $params.gc_upr) && (\$18 > $params.n50)) { print } }' $qcs > pass_qc.tsv
 
+    # Copy asseblies that pass qc
     for assembly_name in `cut -f1 pass_qc.tsv`
     do 
         ln -s ${params.assemblypath}/\${assembly_name}.fasta ./\${assembly_name}.fasta 
     done
+
+    # Create list from good assemblies & create a new metadata file of the filtered results
+    ls *.fasta > good_assemblies.txt
+    awk -F',' 'NR==FNR{c[\$1]++;next};c[\$1] > 0' good_assemblies.txt $metadata_file > good_metadata.csv
+
+    # Add headers to new metadata file by copying the first line of the orginal metadata file
+    printf '%s\n' '0r !head -n 1 $metadata_file' x | ex good_metadata.csv 
     """
 }
 
 good_assemblies.into {assemblies_prokka; assemblies_snippy}
+good_metadata.into {scoary_metadata; amr_process_metadata; model_metadata}
 
 // Annotate via prokka. Reference protein file required
 process prokka_annotation {
@@ -116,13 +137,9 @@ process amrfinder {
     """
 }
 
-// collate amr files
-amr_single_ch
-    .collectFile(keepHeader:true, skip:1, name:"amr_all.tsv", storeDir:"${params.outdir}/amr_out")
 
 // roary
 process roary {
-    publishDir  "${params.outdir}", mode: 'copy', overwrite: true
 
     input:
     file annotations from annotation_roary.collect()
@@ -155,8 +172,10 @@ process piggy {
 // scoary filtering - make traitfile(Assembly,[Hosts]]) via r script
 // TODO move scoary datagen script elsewehere?
 process gen_scoary_traitfile {
+    publishDir  "${params.outdir}/", mode: 'copy', overwrite: true
+
     input:
-    file metadata_file
+    file scoary_metadata
     file scoary_datagen_file
 
     output:
@@ -164,27 +183,61 @@ process gen_scoary_traitfile {
 
     script:
     """
-    Rscript --vanilla ${scoary_datagen_file} $metadata_file $params.assembly_column $params.host_column $params.fileextension
+    Rscript --vanilla ${scoary_datagen_file} $scoary_metadata $params.assembly_column $params.host_column $params.fileextension
     """
 }
 
-// panaroo - do qc script as well?
+scoary_traitfile_ch.into { pv_coll_traitfile; igr_coll_traitfile }
+
+// scoary pv TODO
+process scoary_igr {
+    publishDir  "${params.outdir}/scoary_igr", mode: 'copy', overwrite: true
+
+    input:
+    file igr_coll_traitfile
+    file igrs from piggy_igr_ch
+
+    output:
+    file '*.results.csv' into igr_scores
+
+    script:
+    """
+    scoary -t $igr_coll_traitfile -g $igrs --no-time --collapse -p 1.0
+    """
+}
+
+// panaroo - TODO do qc script as well?
 process panaroo {
+    publishDir  "${params.outdir}/panaroo_out", mode: 'copy', overwrite: true
+
     input:
     file annotations from annotation_panaroo.collect()
 
     output:
-    file "panaroo_out/" into panaroo_dir_ch
+    file "panaroo_out/gene_presence_absence_roary.csv" into panaroo_pres_abs_ch
 
     script:
     """
-    panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate
+    panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate -t $params.threads
     """
 }
 
-// scoary
-// 
+// scoary 
+process scoary_pv {
+    publishDir  "${params.outdir}/scoary_pv", mode: 'copy', overwrite: true
 
+    input:
+    file pv_coll_traitfile
+    file pvs from panaroo_pres_abs_ch
+
+    output:
+    file '*.results.csv' into pv_scores
+
+    script:
+    """
+    scoary -t $pv_coll_traitfile -g $pvs --no-time --collapse -p 1.0
+    """
+}
 
 // snippy
 process snippy {
@@ -202,15 +255,55 @@ process snippy {
 }
 
 process snippy_core {
+    publishDir  "${params.outdir}/snippy_core_out", mode: 'copy', overwrite: true
+
     input:
     file snippy_folders from snippy_folders_ch.collect()
     file snp_ref_file
 
     output:
     file 'core.tab' into snps_ch
+    file 'core.aln' into snp_core_aln_ch
 
     script:
     """
     snippy-core --prefix core --ref "${snp_ref_file}" ${snippy_folders}
+    """
+}
+
+// TODO Add Data prep for model generation
+process amr_process {
+    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true
+
+    input:
+    file amr_process_metadata
+    file amr_file_all from amr_single_ch.collectFile(keepHeader:true, skip:1, name:"amr_all.tsv", storeDir:"${params.outdir}/amr_out")
+
+    output:
+    file "./*.tsv" into amr_model_inputs_ch
+
+    script:
+    """
+    cat $amr_file_all
+    
+    """
+}
+
+// .collectFile(keepHeader:true, skip:1, name:"amr_all.tsv", storeDir:"${params.outdir}/amr_out")
+// TODO Add basic model generation
+// # Rscript --vanilla ${amr_file_all} $params.assembly_column $params.host_column
+
+// TODO ADD SNP-DIST for Nonclonal filtering - but, need to have Region & Year -NOT URRENTLY IMPLEMENTED
+process snp_dists {
+
+    input:
+    file snp_core_aln from snp_core_aln_ch
+
+    output:
+    file 'snpdist_base.tsv' into snp_dist_ch
+
+    script:
+    """
+    snp-dists -m $snp_core_aln > snpdist_base.tsv
     """
 }
