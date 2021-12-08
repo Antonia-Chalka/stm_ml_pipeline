@@ -1,6 +1,7 @@
 #!/usr/bin/env nextflow
 
 // Required params - defaults to testing data
+// HACK THE DIRECTORIES HAVE TO BE ABSOLUTE ONES
 params.outdir = "$projectDir/out"
 params.assemblypath = "$projectDir/input_test/"
 params.hostdata = "$projectDir/input_test/metadata.csv"
@@ -65,31 +66,27 @@ process assembly_qc {
 
 // Filter assemblies based on quast-derived metrics
 process printqc {
-    publishDir  "${params.outdir}/good_assemblies", mode: 'copy', overwrite: true, pattern : '*.${params.fileextension}'
-
+    publishDir  "${params.outdir}/good_assemblies", mode: 'copy', overwrite: true, pattern : "${params.fileextension}"
     input:
     file qcs from quast_ch.collectFile(keepHeader:true, skip:1)
     file metadata_file
 
     output:
-    file '*.${params.fileextension}' into good_assemblies
+    file "*.${params.fileextension}" into good_assemblies
     file 'good_metadata.csv' into good_metadata
 
     script:
     """
-    # Create list of assemlies that pass qc
+    # Create list of assemblies that pass qc & Copy them
     awk -F "\t" '{ if((\$2 < $params.ctg_count) && (\$8 > $params.as_ln_lwr && \$8 < $params.as_ln_upr) && (\$15 > $params.largest_ctg) && (\$17 > $params.gc_lwr && \$17 < $params.gc_upr) && (\$18 > $params.n50)) { print } }' $qcs > pass_qc.tsv
-
-    # Copy asseblies that pass qc
     for assembly_name in `cut -f1 pass_qc.tsv`
     do 
-        ln -s ${params.assemblypath}/\${assembly_name}.${params.fileextension} ./\${assembly_name}.${params.fileextension} 
+        ln -s ${params.assemblypath}/\${assembly_name} \${assembly_name} 
     done
 
     # Create list from good assemblies & create a new metadata file of the filtered results
     ls *.${params.fileextension} > good_assemblies.txt
     awk -F',' 'NR==FNR{c[\$1]++;next};c[\$1] > 0' good_assemblies.txt $metadata_file > good_metadata.csv
-
     # Add headers to new metadata file by copying the first line of the orginal metadata file
     printf '%s\n' '0r !head -n 1 $metadata_file' x | ex good_metadata.csv 
     """
