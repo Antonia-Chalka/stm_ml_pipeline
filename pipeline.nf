@@ -180,7 +180,7 @@ process gen_scoary_traitfile {
 
     script:
     """
-    Rscript --vanilla ${scoary_datagen_file} $scoary_metadata $params.assembly_column $params.host_column $params.fileextension
+    Rscript --vanilla $scoary_datagen_file $scoary_metadata $params.assembly_column $params.host_column $params.fileextension
     """
 }
 
@@ -275,15 +275,15 @@ process amr_process {
 
     input:
     file amr_process_metadata
-    file amr_file_all from amr_single_ch.collectFile(keepHeader:true, skip:1, name:"amr_all.tsv", storeDir:"${params.outdir}/amr_out")
+    file amr_file_all from amr_single_ch.collectFile(keepHeader:true, skip:1, storeDir:"${params.outdir}/amr_out")
 
     output:
-    file "./*.tsv" into amr_model_inputs_ch
+    file "*.tsv" into amr_model_inputs_ch
 
     script:
     """
     cat $amr_file_all
-    
+    Rscript --vanilla ${amr_file_all} ${amr_process_metadata} $params.assembly_column $params.host_column
     """
 }
 */
