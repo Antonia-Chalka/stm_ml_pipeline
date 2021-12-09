@@ -457,7 +457,24 @@ process pv_process {
     """
 }
 
-// TODO Add SNP processing
+// SNP processing
+process snp_process {
+    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+
+    input:
+    path snps_process_script
+    path snp_core
+    path good_nonclonal_metadata
+    
+    output:
+    path "snp_abudance_all.tsv", emit: snp_abudance_all
+    path "snp_abudance_bps.tsv", emit: snp_abudance_bps
+
+    script:
+    """
+    Rscript --vanilla $snps_process_script $snp_core $good_nonclonal_metadata $params.assembly_column $params.host_column
+    """
+}
 
 // TODO Add basic model generation
 
@@ -498,5 +515,6 @@ workflow {
     amr_process(amr_process_script, amr_collect.out, clonal_filtering.out)
     igr_process(igr_process_script, piggy.out.piggy_rtab, scoary_igr.out, clonal_filtering.out)
     pv_process(pv_process_script, panaroo.out.pv_rtab, scoary_pv.out, clonal_filtering.out)
+    snp_process(snps_process_script, snippy_core.out.core_snps, clonal_filtering.out)
 }
 
