@@ -2,12 +2,10 @@ FROM rocker/tidyverse:4.0.5
 
 ARG WHEN
 
-RUN R -e "install.packages('radomForest',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('caret',dependencies=TRUE, repos='http://cran.rstudio.com/')"
-RUN R -e "install.packages('doParallel',dependencies=TRUE, repos='http://cran.rstudio.com/')"
+ENV RENV_VERSION 0.14.0
+RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
+RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
-# TODO CHANGE
-#RUN mkdir /home/analysis
-#COPY myscript.R /home/analysis/myscript.R
-
-# docker build -t staphb/piggy:1.5 .
+WORKDIR /project
+COPY renv.lock renv.lock
+RUN R -e 'renv::restore()'
