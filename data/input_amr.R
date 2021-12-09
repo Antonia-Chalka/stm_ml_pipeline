@@ -12,7 +12,7 @@ if (length(args)!=4) {
 amr_all <- read.table(args[1], sep="\t", quote="",header=TRUE) %>% 
   filter(Element.type =="AMR")
 metadata_all <- read.csv(args[2]) %>% 
-  rename(Filename=args[2],Source.Host=args[3])
+  rename(Filename=args[3],Source.Host=args[4])
 
 print("reading files ok")
 ################## AMR ANTIBIOTIC GENE DATASET #############################
@@ -29,7 +29,6 @@ amr_gene_metadata_bps <- inner_join(amr_all, metadata_all, by="Filename") %>%
   filter(Source.Host != "Human") %>%
   pivot_wider(names_from = Gene.symbol, values_from = n,  values_fill = 0) %>%
   column_to_rownames(var="Filename")
-
 write.table(amr_gene_metadata_bps, file="./amr_gene_bps.tsv", sep="\t")
 
 ################## AMR ANTIBIOTIC CLASS DATASET #############################
