@@ -31,6 +31,7 @@ params.gc_lwr = 50
 
 // Computing parameters
 params.threads = 5
+params.model_threads=5
 
 // Prokka reference file - required
 params.prokka_ref = "$projectDir/data/stm_proteinref.fasta"
@@ -57,6 +58,8 @@ amr_process_script=file("$projectDir/data/input_amr.R")
 pv_process_script=file("$projectDir/data/input_pv.R")
 igr_process_script=file("$projectDir/data/input_igr.R")
 snps_process_script=file("$projectDir/data/input_snps.R")
+
+model_building_script=file("$projectDir/data/model_building.R")
 
 ////////////////////// Modules ////////////////////////////////////////////////////////////////////////
 // Run Quast
@@ -357,7 +360,7 @@ process clonal_filtering {
 
 
 }
-// TODO Process to concantenate all amr files
+//Concantenate all amr files
 
 process amr_collect {
     input:
@@ -393,7 +396,7 @@ process amr_process {
     
     output:
     path "amr_gene_all.tsv", emit: amr_gene_all
-    path "amr_gene_bps.tsv", emit: amr_amr_gene_bps
+    path "amr_gene_bps.tsv", emit: amr_gene_bps
     path "amr_class_all.tsv", emit: amr_class_all
     path "amr_class_bps.tsv", emit: amr_class_bps
 
@@ -476,7 +479,36 @@ process snp_process {
     """
 }
 
-// TODO Add basic model generation
+// Model generation
+process model_building {
+    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
+    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
+    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: "*.png"
+
+    input:
+    path amr_class_all
+    path amr_class_bps
+    path amr_gene_all
+    path amr_gene_bps
+    path pv_all
+    path pv_bps
+    path igr_all
+    path igr_bps
+    path snp_abudance_all
+    path snp_abudance_bps
+    path model_building_script
+
+    output:
+    path "*.rds", emit: models
+    path "*.csv", emit: predictions
+    path "*.png", emit: plots
+
+    script:
+    """
+    Rscript --vanilla $model_building_script $amr_class_all $amr_class_bps $amr_gene_all $amr_gene_bps $pv_all $pv_bps $igr_all $igr_bps $snp_abudance_all $snp_abudance_bps $params.model_threads
+    """
+}
+
 
 // TODO Add plylogeny (separate workflow)
 
@@ -495,7 +527,8 @@ workflow model_prep {
 
 workflow {
     assembly_qc(assemblies)
-    printqc(assembly_qc.out.collectFile(keepHeader:true, skip:1), metadata_file )
+    printqc(assembly_qc.out.collectFile(keepHeader:true, skip:1), metadata_file)
+
     prokka_annotation(printqc.out.good_assemblies.flatten(), prokka_ref_file)
     amrfinder(prokka_annotation.out.annotation, prokka_annotation.out.transl_protein, prokka_annotation.out.nucleotide)
     roary(prokka_annotation.out.annotation.collect())
@@ -516,5 +549,13 @@ workflow {
     igr_process(igr_process_script, piggy.out.piggy_rtab, scoary_igr.out, clonal_filtering.out)
     pv_process(pv_process_script, panaroo.out.pv_rtab, scoary_pv.out, clonal_filtering.out)
     snp_process(snps_process_script, snippy_core.out.core_snps, clonal_filtering.out)
+
+    model_building( amr_process.out.amr_class_all, amr_process.out.amr_class_bps,
+                    amr_process.out.amr_gene_all, amr_process.out.amr_gene_bps,
+                    pv_process.out.pv_all, pv_process.out.pv_bps,
+                    igr_process.out.igr_all, igr_process.out.igr_bps,
+                    snp_process.out.snp_abudance_all, snp_process.out.snp_abudance_bps,
+                    model_building_script
+                    )
 }
 

@@ -9,3 +9,6 @@ RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 WORKDIR /project
 COPY renv.lock renv.lock
 RUN R -e 'renv::restore()'
+
+RUN R -e "install.packages('e1071', dependencies=TRUE)"
+
