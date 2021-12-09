@@ -223,7 +223,8 @@ process panaroo {
     path annotations //from annotation_panaroo.collect()
 
     output:
-    path "panaroo_out/gene_presence_absence_roary.csv" 
+    path "panaroo_out/gene_presence_absence_roary.csv", emit: pv_csv
+    path "panaroo_out/gene_presence_absence.Rtab", emit: pv_rtab
 
     script:
     """
@@ -280,7 +281,7 @@ process snippy_core {
     """
 }
 
-// TODO ADD SNP-DIST for Nonclonal filtering - but, need to have Region & Year -NOT URRENTLY IMPLEMENTED
+// SNP-DIST for Nonclonal filtering
 process snp_dists {
 
     input:
@@ -381,9 +382,7 @@ process amr_collect {
 
 }
 
-
 // Process AMR Data for model generation
-//TODO TEST
 process amr_process {
     publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
 
@@ -404,7 +403,7 @@ process amr_process {
     """
 }
 
-// TODO Add IGR Processing
+//IGR Processing
 process igr_process {
     publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
 
@@ -430,6 +429,34 @@ process igr_process {
     Rscript --vanilla $igr_process_script ${igr_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column
     """
 }
+
+// PV Processing
+process pv_process {
+    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+
+    input:
+    path pv_process_script
+    path pv_file_all
+    path scoary_files
+    path good_nonclonal_metadata
+    
+    output:
+    path "pv_all.tsv", emit: pv_all
+    path "pv_bps.tsv", emit: pv_bps
+
+    script:
+    """
+    # Combine all scoary files into one & add headers
+    for file in *.results.csv
+    do
+        sed '1d' \$file >>  scoary_all.csv
+    done 
+    sed -i "1s/^/\$(head -n1 \$file)\\n/" scoary_all.csv
+
+    Rscript --vanilla $pv_process_script ${pv_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column
+    """
+}
+
 // TODO Add SNP processing
 
 // TODO Add basic model generation
@@ -459,7 +486,7 @@ workflow {
     gen_scoary_traitfile(printqc.out.good_metadata, scoary_datagen_file)
     scoary_igr(gen_scoary_traitfile.out, piggy.out.piggy_csv)
     panaroo(prokka_annotation.out.annotation.collect())
-    scoary_pv(gen_scoary_traitfile.out, panaroo.out)
+    scoary_pv(gen_scoary_traitfile.out, panaroo.out.pv_csv)
     snippy(printqc.out.good_assemblies.flatten(), snp_ref_file)
     snippy_core(snippy.out.collect(), snp_ref_file)
 
@@ -470,5 +497,6 @@ workflow {
     amr_collect(amrfinder.out.collect())
     amr_process(amr_process_script, amr_collect.out, clonal_filtering.out)
     igr_process(igr_process_script, piggy.out.piggy_rtab, scoary_igr.out, clonal_filtering.out)
+    pv_process(pv_process_script, panaroo.out.pv_rtab, scoary_pv.out, clonal_filtering.out)
 }
 
