@@ -170,7 +170,8 @@ process piggy {
     path roary_dir 
 
     output:
-    path "./piggy_out/IGR_presence_absence.csv" 
+    path "./piggy_out/IGR_presence_absence.csv", emit: piggy_csv
+    path "./piggy_out/IGR_presence_absence.Rtab", emit: piggy_rtab
 
     script:
     """
@@ -403,9 +404,32 @@ process amr_process {
     """
 }
 
-
 // TODO Add IGR Processing
+process igr_process {
+    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
 
+    input:
+    path igr_process_script
+    path igr_file_all
+    path scoary_files
+    path good_nonclonal_metadata
+    
+    output:
+    path "igr_all.tsv", emit: igr_all
+    path "igr_bps.tsv", emit: igr_bps
+
+    script:
+    """
+    # Combine all scoary files into one & add headers
+    for file in *.results.csv
+    do
+        sed '1d' \$file >>  scoary_all.csv
+    done 
+    sed -i "1s/^/\$(head -n1 \$file)\\n/" scoary_all.csv
+
+    Rscript --vanilla $igr_process_script ${igr_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column
+    """
+}
 // TODO Add SNP processing
 
 // TODO Add basic model generation
@@ -433,7 +457,7 @@ workflow {
     roary(prokka_annotation.out.annotation.collect())
     piggy(prokka_annotation.out.annotation.collect(), roary.out)
     gen_scoary_traitfile(printqc.out.good_metadata, scoary_datagen_file)
-    scoary_igr(gen_scoary_traitfile.out, piggy.out)
+    scoary_igr(gen_scoary_traitfile.out, piggy.out.piggy_csv)
     panaroo(prokka_annotation.out.annotation.collect())
     scoary_pv(gen_scoary_traitfile.out, panaroo.out)
     snippy(printqc.out.good_assemblies.flatten(), snp_ref_file)
@@ -445,5 +469,6 @@ workflow {
 
     amr_collect(amrfinder.out.collect())
     amr_process(amr_process_script, amr_collect.out, clonal_filtering.out)
+    igr_process(igr_process_script, piggy.out.piggy_rtab, scoary_igr.out, clonal_filtering.out)
 }
 
