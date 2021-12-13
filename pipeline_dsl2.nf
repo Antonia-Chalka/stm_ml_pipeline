@@ -29,7 +29,11 @@ params.gc_upr = 54
 params.gc_lwr = 50
 
 // Computing parameters - 
+<<<<<<< HEAD
 // TODO Improve implementation of inputted threads
+=======
+// TODO Improve implementation
+>>>>>>> 5132a4b387606d35283c27c01a84a8e839038c52
 params.threads = 5
 params.model_threads=5
 

@@ -106,4 +106,8 @@ Succeeded   : 80
 ```
 
 My STm Dataset (3313 assemblies that pass qc, ~2.2k nonclonal):
+<<<<<<< HEAD
 TODO add benchmarks for big dataset
+=======
+TODO 
+>>>>>>> 5132a4b387606d35283c27c01a84a8e839038c52
