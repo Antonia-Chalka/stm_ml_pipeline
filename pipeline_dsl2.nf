@@ -10,10 +10,9 @@ params.hostdata = "$projectDir/input_test/metadata.csv"
 
 params.assembly_column="Filename"
 params.host_column="Source.Host"
-
 params.region_column="Region"
 params.year_collected="Year"
-params.check_clonal=true
+params.check_clonal=true // placeholder - doesnt currently do anything
 
 params.snp_dist_threshold=10
 
@@ -29,7 +28,8 @@ params.n50 = 50000
 params.gc_upr = 54
 params.gc_lwr = 50
 
-// Computing parameters
+// Computing parameters - 
+// TODO Improve implementation
 params.threads = 5
 params.model_threads=5
 
@@ -129,8 +129,7 @@ process prokka_annotation {
     """
 }
 
-//annotation_ch.into { annotation_amrfinder; annotation_roary; annotation_piggy; annotation_panaroo }
-
+// Run Amrfinder using all possible inputs (assembly, ggff, and trans portein files)
 process amrfinder {
 
     input:
@@ -143,14 +142,14 @@ process amrfinder {
 
     script:
     """
+    # Convert the prokka generated gff into a format amrfinder accepts
     perl -pe '/^##FASTA/ && exit; s/(\\W)Name=/\$1OldName=/i; s/ID=([^;]+)/ID=\$1;Name=\$1/' $annotation  > amrfinder.gff
 
     amrfinder -p ${trans_protein} -g amrfinder.gff -n ${nucleotide} -O ${params.amr_species} -o "${annotation.baseName}_amr.tsv" --name --plus
     """
 }
 
-
-// roary
+// Run roary as the output directory is needed by piggy as an input
 process roary {
 
     input:
@@ -165,6 +164,7 @@ process roary {
     """
 }
 
+// Run piggy (extracts intergenic regions)
 process piggy {
     publishDir  "${params.outdir}", mode: 'copy', overwrite: true
 
@@ -199,9 +199,7 @@ process gen_scoary_traitfile {
     """
 }
 
-//scoary_traitfile_ch.into { pv_coll_traitfile; igr_coll_traitfile }
-
-// scoary pv TODO
+// Filter piggy output (igrs) with scoary
 process scoary_igr {
     publishDir  "${params.outdir}/scoary_igr", mode: 'copy', overwrite: true
 
@@ -218,7 +216,7 @@ process scoary_igr {
     """
 }
 
-// panaroo - TODO do qc script as well?
+// Run panaroo 
 process panaroo {
     publishDir  "${params.outdir}/panaroo_out", mode: 'copy', overwrite: true
 
@@ -235,7 +233,7 @@ process panaroo {
     """
 }
 
-// scoary 
+// Filter panaroo output (pvs) with scoary
 process scoary_pv {
     publishDir  "${params.outdir}/scoary_pv", mode: 'copy', overwrite: true
 
@@ -267,6 +265,7 @@ process snippy {
     """
 }
 
+// Get core SNPs
 process snippy_core {
     publishDir  "${params.outdir}/snippy_core_out", mode: 'copy', overwrite: true
 
@@ -284,7 +283,7 @@ process snippy_core {
     """
 }
 
-// SNP-DIST for Nonclonal filtering
+// Get SNP distance of assemblies to use in nonclonal filtering
 process snp_dists {
 
     input:
@@ -357,11 +356,9 @@ process clonal_filtering {
     awk -F',' 'NR==FNR{c[\$1]++;next};c[\$1] > 0' all_nonclonal.txt $metadata > good_nonclonal_metadata.csv 
     printf '%s\n' '0r !head -n 1 $metadata' x | ex good_nonclonal_metadata.csv 
     """
-
-
 }
-//Concantenate all amr files
 
+//Concantenate all amr files
 process amr_collect {
     input:
     path amr_files
@@ -381,8 +378,6 @@ process amr_collect {
     # Add headers
     sed -i.bak 1i"Name\tProtein identifier\tContig id\tStart\tStop\tStrand\tGene symbol\tSequence name\tScope\tElement.type\tElement subtype\tClass\tSubclass\tMethod\tTarget length\tReference sequence length\t% Coverage of reference sequence\t% Identity to reference sequence\tAlignment length\tAccession of closest sequence\tName of closest sequence\tHMM id\tHMM description\tFilename" amr_all.tsv
     """
-
-
 }
 
 // Process AMR Data for model generation
@@ -516,15 +511,6 @@ process model_building {
 assemblies = Channel.fromPath("${params.assemblypath}/*.${fileextension}")
 metadata_file = file(params.hostdata)
 
-// TODO Break up into subworkflows (one where it doesnt check for clonal)
-/*
-workflow model_prep {
-    if( params.check_clonal )  // defaults to true 
-        bar(params.data)
-    else
-        bar(foo()) }
-*/
-
 workflow {
     assembly_qc(assemblies)
     printqc(assembly_qc.out.collectFile(keepHeader:true, skip:1), metadata_file)
@@ -559,3 +545,12 @@ workflow {
                     )
 }
 
+// TODO Break up into subworkflows (one where it doesnt check for clonal)
+/*
+workflow model_prep {
+    if( params.check_clonal )  // defaults to true 
+        bar(params.data)
+    else
+        bar(foo()) }
+*/
+// TODO Add workflow for inputting new data

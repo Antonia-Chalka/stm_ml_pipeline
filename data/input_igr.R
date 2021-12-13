@@ -13,9 +13,8 @@ if (length(args)!=5) {
 # Piggy Everything
 piggy_all<- read.table(args[1], header=TRUE)
   ##### Scoary input #####
-scoary_sig<- read.csv(args[2], header = TRUE, sep=",", stringsAsFactors = FALSE) 
-# %>%  filter(Bonferroni_p < 0.05)
-# TODO add the above filter to final pipeline
+scoary_sig<- read.csv(args[2], header = TRUE, sep=",", stringsAsFactors = FALSE) %>%  filter(Bonferroni_p < 0.05)
+# HACK add the above filter to final pipeline
 # Non-clonal metadata
 metadata_nonclonal  <- read.csv(args[3], header=TRUE) %>%
   rename(Filename=args[4],Source.Host=args[5]) %>%
