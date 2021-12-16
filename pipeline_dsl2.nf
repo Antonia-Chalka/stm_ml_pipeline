@@ -54,6 +54,8 @@ scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
 clonal_detection_script=file("$projectDir/data/filter_script.R")
 
 // R scripts for model input processing
+params.scoarycutoff=1.1
+
 amr_process_script=file("$projectDir/data/input_amr.R")
 pv_process_script=file("$projectDir/data/input_pv.R")
 igr_process_script=file("$projectDir/data/input_igr.R")
@@ -64,7 +66,7 @@ model_building_script=file("$projectDir/data/model_building.R")
 ////////////////////// Modules ////////////////////////////////////////////////////////////////////////
 // Run Quast
 process assembly_qc {
-    publishDir  "${params.outdir}/qc_report", mode: 'copy', overwrite: true
+    cache 'lenient'
 
     input:
     path assembly
@@ -81,6 +83,8 @@ process assembly_qc {
 // Filter assemblies based on quast-derived metrics
 process printqc {
     publishDir  "${params.outdir}/good_assemblies", mode: 'copy', overwrite: true, pattern : "*.${fileextension}"
+    cache 'lenient'
+
     input:
     path qcs
     path metadata_file
@@ -113,6 +117,7 @@ process printqc {
 // Annotate via prokka. Reference protein file required
 process prokka_annotation {
     publishDir  "${params.outdir}/annotation", mode: 'copy', overwrite: true
+    cache 'lenient'
 
     input:
     path good_qc_assembly 
@@ -131,6 +136,7 @@ process prokka_annotation {
 
 // Run Amrfinder using all possible inputs (assembly, ggff, and trans portein files)
 process amrfinder {
+    cache 'lenient'
 
     input:
     path annotation 
@@ -149,24 +155,67 @@ process amrfinder {
     """
 }
 
-// Run roary as the output directory is needed by piggy as an input
-process roary {
+// scoary filtering - make traitfile(Assembly,[Hosts]]) via r script
+process gen_scoary_traitfile {
+    publishDir  "${params.outdir}/", mode: 'copy', overwrite: true
+    cache 'lenient'
 
     input:
-    path annotations //from annotation_roary.collect()
+    path metadata
+    path scoary_datagen_file
 
     output:
-    path "roary_out/" 
+    path "./scoary_traitfile.csv" 
 
     script:
     """
-    roary -v -s -f "roary_out" ${annotations}
+    Rscript --vanilla $scoary_datagen_file $metadata $params.assembly_column $params.host_column
+    """
+}
+
+// Run panaroo 
+process panaroo {
+    publishDir  "${params.outdir}/panaroo_out", mode: 'copy', overwrite: true
+    cache 'lenient'
+
+    input:
+    path annotations //from annotation_panaroo.collect()
+
+    output:
+    path "panaroo_out/gene_presence_absence_roary.csv", emit: pv_csv
+    path "panaroo_out/gene_presence_absence.Rtab", emit: pv_rtab
+    path "roary_out/", emit: roary_dir
+
+    script:
+    """
+    panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate -t $params.threads
+    mkdir ./roary_out
+    cp  ./panaroo_out/gene_presence_absence_roary.csv ./roary_out/gene_presence_absence.csv
+    """
+}
+
+// Filter panaroo output (pvs) with scoary
+process scoary_pv {
+    publishDir  "${params.outdir}/scoary_pv", mode: 'copy', overwrite: true
+    cache 'lenient'
+
+    input:
+    path pv_coll_traitfile
+    path pvs 
+
+    output:
+    path '*.results.csv' 
+
+    script:
+    """
+    scoary -t $pv_coll_traitfile -g $pvs --no-time --collapse -p 1.0
     """
 }
 
 // Run piggy (extracts intergenic regions)
 process piggy {
     publishDir  "${params.outdir}", mode: 'copy', overwrite: true
+    cache 'lenient'
 
     input:
     path annotations // from annotation_piggy.collect()
@@ -182,26 +231,10 @@ process piggy {
     """
 }
 
-// scoary filtering - make traitfile(Assembly,[Hosts]]) via r script
-process gen_scoary_traitfile {
-    publishDir  "${params.outdir}/", mode: 'copy', overwrite: true
-
-    input:
-    path metadata
-    path scoary_datagen_file
-
-    output:
-    path "./scoary_traitfile.csv" 
-
-    script:
-    """
-    Rscript --vanilla $scoary_datagen_file $metadata $params.assembly_column $params.host_column
-    """
-}
-
 // Filter piggy output (igrs) with scoary
 process scoary_igr {
     publishDir  "${params.outdir}/scoary_igr", mode: 'copy', overwrite: true
+    cache 'lenient'
 
     input:
     path igr_coll_traitfile
@@ -216,42 +249,10 @@ process scoary_igr {
     """
 }
 
-// Run panaroo 
-process panaroo {
-    publishDir  "${params.outdir}/panaroo_out", mode: 'copy', overwrite: true
-
-    input:
-    path annotations //from annotation_panaroo.collect()
-
-    output:
-    path "panaroo_out/gene_presence_absence_roary.csv", emit: pv_csv
-    path "panaroo_out/gene_presence_absence.Rtab", emit: pv_rtab
-
-    script:
-    """
-    panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate -t $params.threads
-    """
-}
-
-// Filter panaroo output (pvs) with scoary
-process scoary_pv {
-    publishDir  "${params.outdir}/scoary_pv", mode: 'copy', overwrite: true
-
-    input:
-    path pv_coll_traitfile
-    path pvs 
-
-    output:
-    path '*.results.csv' 
-
-    script:
-    """
-    scoary -t $pv_coll_traitfile -g $pvs --no-time --collapse -p 1.0
-    """
-}
-
 // snippy
 process snippy {
+    cache 'lenient'
+
     input:
     path assembly 
     path snp_ref_file
@@ -268,6 +269,7 @@ process snippy {
 // Get core SNPs
 process snippy_core {
     publishDir  "${params.outdir}/snippy_core_out", mode: 'copy', overwrite: true
+    cache 'lenient'
 
     input:
     path snippy_folders
@@ -285,6 +287,7 @@ process snippy_core {
 
 // Get SNP distance of assemblies to use in nonclonal filtering
 process snp_dists {
+    cache 'lenient'
 
     input:
     path snp_core_aln 
@@ -302,6 +305,7 @@ process snp_dists {
 // HACK If no clusters are detected, no list file is produced. so a blank one has been used for now
 process clonal_detection {
     publishDir  "${params.outdir}/clonal_detection", mode: 'copy', overwrite: true, pattern : "*.png"
+    cache 'lenient'
 
     input:
     path clonal_detection_script
@@ -320,6 +324,7 @@ process clonal_detection {
 
 process clonal_filtering {
     publishDir  "${params.outdir}/clonal_detection", mode: 'copy', overwrite: true, pattern : "*.txt"
+    cache 'lenient'
     
     input:
     path clusters
@@ -360,6 +365,9 @@ process clonal_filtering {
 
 //Concantenate all amr files
 process amr_collect {
+    publishDir  "${params.outdir}/amr_out", mode: 'copy', overwrite: true, pattern : "amr_all.tsv"
+    cache 'lenient'
+
     input:
     path amr_files
 
@@ -383,6 +391,7 @@ process amr_collect {
 // Process AMR Data for model generation
 process amr_process {
     publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+    cache 'lenient'
 
     input:
     path amr_process_script
@@ -404,6 +413,7 @@ process amr_process {
 //IGR Processing
 process igr_process {
     publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+    cache 'lenient'
 
     input:
     path igr_process_script
@@ -424,13 +434,14 @@ process igr_process {
     done 
     sed -i "1s/^/\$(head -n1 \$file)\\n/" scoary_all.csv
 
-    Rscript --vanilla $igr_process_script ${igr_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column
+    Rscript --vanilla $igr_process_script ${igr_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column $params.scoarycutoff
     """
 }
 
 // PV Processing
 process pv_process {
     publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+    cache 'lenient'
 
     input:
     path pv_process_script
@@ -451,13 +462,14 @@ process pv_process {
     done 
     sed -i "1s/^/\$(head -n1 \$file)\\n/" scoary_all.csv
 
-    Rscript --vanilla $pv_process_script ${pv_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column
+    Rscript --vanilla $pv_process_script ${pv_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column $params.scoarycutoff
     """
 }
 
 // SNP processing
 process snp_process {
     publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+    cache 'lenient'
 
     input:
     path snps_process_script
@@ -479,6 +491,7 @@ process model_building {
     publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
     publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
     publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: "*.png"
+    cache 'lenient'
 
     input:
     path amr_class_all
@@ -513,16 +526,15 @@ metadata_file = file(params.hostdata)
 
 workflow {
     assembly_qc(assemblies)
-    printqc(assembly_qc.out.collectFile(keepHeader:true, skip:1), metadata_file)
+    printqc(assembly_qc.out.collectFile(keepHeader:true, skip:1, sort:true,storeDir:"${params.outdir}/good_assemblies"), metadata_file)
 
     prokka_annotation(printqc.out.good_assemblies.flatten(), prokka_ref_file)
     amrfinder(prokka_annotation.out.annotation, prokka_annotation.out.transl_protein, prokka_annotation.out.nucleotide)
-    roary(prokka_annotation.out.annotation.collect())
-    piggy(prokka_annotation.out.annotation.collect(), roary.out)
     gen_scoary_traitfile(printqc.out.good_metadata, scoary_datagen_file)
-    scoary_igr(gen_scoary_traitfile.out, piggy.out.piggy_csv)
     panaroo(prokka_annotation.out.annotation.collect())
+    piggy(prokka_annotation.out.annotation.collect(), panaroo.out.roary_dir)
     scoary_pv(gen_scoary_traitfile.out, panaroo.out.pv_csv)
+    scoary_igr(gen_scoary_traitfile.out, piggy.out.piggy_csv)
     snippy(printqc.out.good_assemblies.flatten(), snp_ref_file)
     snippy_core(snippy.out.collect(), snp_ref_file)
 

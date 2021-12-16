@@ -4,17 +4,16 @@ set.seed(100)
 
 args = commandArgs(trailingOnly=TRUE)
 # test if there is at least x argumentS: if not, return an error
-if (length(args)!=5) {
+if (length(args)!=6) {
   length(args)
-  stop("Exactly 5 arguments must be supplied (input file).n", call.=FALSE)
+  stop("Exactly 6 arguments must be supplied (input file).n", call.=FALSE)
 } 
 
 ########### Load data #############
 # Piggy Everything
 piggy_all<- read.table(args[1], header=TRUE)
   ##### Scoary input #####
-scoary_sig<- read.csv(args[2], header = TRUE, sep=",", stringsAsFactors = FALSE) %>%  filter(Bonferroni_p < 0.05)
-# HACK add the above filter to final pipeline
+scoary_sig<- read.csv(args[2], header = TRUE, sep=",", stringsAsFactors = FALSE) %>%  filter(Bonferroni_p < as.double(args[6]))
 # Non-clonal metadata
 metadata_nonclonal  <- read.csv(args[3], header=TRUE) %>%
   rename(Filename=args[4],Source.Host=args[5]) %>%
