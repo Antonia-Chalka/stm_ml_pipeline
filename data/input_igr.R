@@ -45,7 +45,11 @@ piggy_sig_met_nonclonal_c <- inner_join(piggy_sig_trans_c, metadata_nonclonal, b
 write.table(piggy_sig_met_nonclonal_c, file="igr_all.tsv", sep="\t")
 
 # non-clonal & livestock
-piggy_sig_met_nonclonal_bps_c <- inner_join(piggy_sig_trans_c, metadata_nonclonal, by=c("Assembly" = "Filename"))  %>%
-  column_to_rownames(var="Assembly") %>%
+piggy_sig_met_nonclonal_bps_c <- piggy_sig_met_nonclonal_c  %>%
   filter(Source.Host != "Human")
 write.table(piggy_sig_met_nonclonal_bps_c, file="igr_bps.tsv", sep="\t")
+
+# human vs non human
+piggy_sig_met_nonclonal_human_c <- piggy_sig_met_nonclonal_c  %>%
+  mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
+write.table(piggy_sig_met_nonclonal_human_c, file="igr_human.tsv", sep="\t")

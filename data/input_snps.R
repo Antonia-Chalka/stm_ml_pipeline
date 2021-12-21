@@ -49,12 +49,13 @@ snp_filter_trans = snp_filter_trans[-1,] # remove header row
 snp_abudance_nonclonal <- inner_join(snp_filter_trans, metadata_nonclonal, by=c("Assembly" = "Filename"))  %>%
   column_to_rownames(var="Assembly")
 write.table(snp_abudance_nonclonal, file="snp_abudance_all.tsv", sep="\t")
+
 # Non clonal bps
-snp_abudance_nonclonal_bps <- inner_join(snp_filter_trans, metadata_nonclonal, by=c("Assembly" = "Filename"))  %>%
-  column_to_rownames(var="Assembly") %>%
+snp_abudance_nonclonal_bps <- snp_abudance_nonclonal %>%
   filter(Source.Host != "Human")
 write.table(snp_abudance_nonclonal_bps, file="snp_abudance_bps.tsv", sep="\t")
 
-
-
-
+# Non clonal bps
+snp_abudance_nonclonal_human <- snp_abudance_nonclonal %>%
+  mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
+write.table(snp_abudance_nonclonal_human, file="snp_abudance_human.tsv", sep="\t")

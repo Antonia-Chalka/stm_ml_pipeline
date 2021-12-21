@@ -24,12 +24,14 @@ amr_gene_metadata_all <- inner_join(amr_all, metadata_all, by="Filename") %>%
 write.table(amr_gene_metadata_all, file="./amr_gene_all.tsv", sep="\t")
 
 # Only livestock assemblies 
-amr_gene_metadata_bps <- inner_join(amr_all, metadata_all, by="Filename") %>% 
-  count(Gene.symbol, Filename, Source.Host) %>%
-  filter(Source.Host != "Human") %>%
-  pivot_wider(names_from = Gene.symbol, values_from = n,  values_fill = 0) %>%
-  column_to_rownames(var="Filename")
+amr_gene_metadata_bps <- amr_gene_metadata_all %>% 
+  filter(Source.Host != "Human")
 write.table(amr_gene_metadata_bps, file="./amr_gene_bps.tsv", sep="\t")
+
+# Human vs Non Human
+amr_gene_metadata_human <- amr_gene_metadata_all %>%  
+  mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
+write.table(amr_gene_metadata_human, file="./amr_gene_human.tsv", sep="\t")
 
 ################## AMR ANTIBIOTIC CLASS DATASET #############################
 # All hosts, all assemblies 
@@ -40,9 +42,11 @@ amr_class_metadata_all <- inner_join(amr_all, metadata_all, by="Filename") %>%
 write.table(amr_class_metadata_all, file="./amr_class_all.tsv", sep="\t")
 
 # Only livestock assemblies 
-amr_class_metadata_bps <- inner_join(amr_all, metadata_all, by="Filename") %>% 
-  count(Class, Filename, Source.Host) %>% 
-  filter(Source.Host != "Human") %>%
-  pivot_wider(names_from = Class, values_from = n,  values_fill = 0) %>%
-  column_to_rownames(var="Filename")
+amr_class_metadata_bps <- amr_class_metadata_all %>%
+  filter(Source.Host != "Human")
 write.table(amr_class_metadata_bps, file="./amr_class_bps.tsv", sep="\t")
+
+# Human vs Non Human
+amr_class_metadata_human <- amr_class_metadata_bps %>%
+  mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
+write.table(amr_class_metadata_human, file="./amr_class_human.tsv", sep="\t")
