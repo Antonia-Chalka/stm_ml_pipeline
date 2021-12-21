@@ -2,55 +2,17 @@
 nextflow.enable.dsl=2
 
 ///////////////////////// Parameters /////////////////////////////////////////////////////////////////
-// Required params - defaults to testing data
-// HACK THE DIRECTORIES HAVE TO BE ABSOLUTE ONES
-params.outdir = "$projectDir/out"
-params.assemblypath = "$projectDir/input_test"
-params.hostdata = "$projectDir/input_test/metadata.csv"
-
-params.assembly_column="Filename"
-params.host_column="Source.Host"
-params.region_column="Region"
-params.year_collected="Year"
-params.check_clonal=true // placeholder - doesnt currently do anything
-
-params.snp_dist_threshold=10
-
-//params.fileextension="fasta" // HACK Seeting it up as anything non-fasta messes up the quast output
+// HACK Seeting it up as anything non-fasta messes up the quast output
 fileextension="fasta"
 
-// Assembly quality thresholds
-params.as_ln_upr = 6000000
-params.as_ln_lwr = 4000000
-params.ctg_count = 500
-params.largest_ctg = 100000
-params.n50 = 50000
-params.gc_upr = 54
-params.gc_lwr = 50
-
-// Computing parameters - 
-// TODO Improve implementation of inputted threads
-params.threads = 5
-params.model_threads=5
-
-// Prokka reference file - required
-params.prokka_ref = "$projectDir/data/stm_proteinref.fasta"
+// Use inputted prokka & snippy reference files
 prokka_ref_file = file(params.prokka_ref)
-
-// AMRfinder parameters
-params.amr_species='Salmonella'
-
-// Panaroo parameters
-params.panaroo_mode = 'moderate'
-
-// Snippy parameters
-params.snp_ref = "$projectDir/data/stm_sl1344.fasta"
 snp_ref_file = file(params.snp_ref)
 
-// Scoary hostfile script (Currently missing years/hosts cannot be clustered)
+// R script to generate scoary traitfile
 scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
 
-// R script for detection
+// R script for clonal detection
 clonal_detection_script=file("$projectDir/data/filter_script.R")
 
 // R scripts for model input processing
@@ -59,8 +21,41 @@ pv_process_script=file("$projectDir/data/input_pv.R")
 igr_process_script=file("$projectDir/data/input_igr.R")
 snps_process_script=file("$projectDir/data/input_snps.R")
 
+// R scripts for model building
 model_building_script=file("$projectDir/data/model_building.R")
 model_building_human_script=file("$projectDir/data/model_building_human.R")
+
+
+////////////////////// HELP Section //////////////////////////////////////////////
+// TODO Change help message 
+def helpMessage() {
+  log.info """
+        Usage:
+        The typical command for running the pipeline is as follows:
+        
+        Mandatory arguments:
+         --query                        Query fasta file of sequences you wish to BLAST
+         --dbDir                        BLAST database directory (full path required)
+         --dbName                       Prefix name of the BLAST database
+
+       Optional arguments:
+        --outdir                       Output directory to place final BLAST output
+        --outfmt                       Output format ['6']
+        --options                      Additional options for BLAST command [-evalue 1e-3]
+        --outFileName                  Prefix name for BLAST output [input.blastout]
+        --threads                      Number of CPUs to use during blast job [16]
+        --chunkSize                    Number of fasta records to use when splitting the query fasta file
+        --app                          BLAST program to use [blastn;blastp,tblastn,blastx]
+        --help                         This usage statement.
+        """
+}
+
+// Show help message
+if (params.help) {
+    helpMessage()
+    exit 0
+}
+
 
 ////////////////////// Modules ////////////////////////////////////////////////////////////////////////
 // Run Quast
