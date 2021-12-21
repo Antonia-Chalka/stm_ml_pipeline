@@ -60,6 +60,7 @@ igr_process_script=file("$projectDir/data/input_igr.R")
 snps_process_script=file("$projectDir/data/input_snps.R")
 
 model_building_script=file("$projectDir/data/model_building.R")
+model_building_human_script=file("$projectDir/data/model_building_human.R")
 
 ////////////////////// Modules ////////////////////////////////////////////////////////////////////////
 // Run Quast
@@ -392,8 +393,10 @@ process amr_process {
     output:
     path "amr_gene_all.tsv", emit: amr_gene_all
     path "amr_gene_bps.tsv", emit: amr_gene_bps
+    path "amr_gene_human.tsv", emit: amr_gene_human
     path "amr_class_all.tsv", emit: amr_class_all
     path "amr_class_bps.tsv", emit: amr_class_bps
+    path "amr_class_human.tsv", emit: amr_class_human
 
     script:
     """
@@ -414,6 +417,7 @@ process igr_process {
     output:
     path "igr_all.tsv", emit: igr_all
     path "igr_bps.tsv", emit: igr_bps
+    path "igr_human.tsv", emit: igr_human
 
     script:
     """
@@ -441,6 +445,7 @@ process pv_process {
     output:
     path "pv_all.tsv", emit: pv_all
     path "pv_bps.tsv", emit: pv_bps
+    path "pv_human.tsv", emit: pv_human
 
     script:
     """
@@ -467,6 +472,7 @@ process snp_process {
     output:
     path "snp_abudance_all.tsv", emit: snp_abudance_all
     path "snp_abudance_bps.tsv", emit: snp_abudance_bps
+    path "snp_abudance_human.tsv", emit: snp_abudance_human
 
     script:
     """
@@ -474,7 +480,7 @@ process snp_process {
     """
 }
 
-// Model generation
+// Model generation - Host/Source Attribution
 process model_building {
     publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
     publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
@@ -504,6 +510,30 @@ process model_building {
     """
 }
 
+// Model generation - Human scoring models
+process model_building_human {
+    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
+    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
+    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: "*.png"
+
+    input:
+    path amr_class_human
+    path amr_gene_human
+    path pv_human
+    path igr_human
+    path snp_abudance_human
+    path model_building_human_script
+
+    output:
+    path "*.rds", emit: models
+    path "*.csv", emit: predictions
+    path "*.png", emit: plots
+
+    script:
+    """
+    Rscript --vanilla $model_building_human_script $amr_class_human $amr_gene_human $pv_human $igr_human $snp_abudance_human $params.model_threads
+    """
+}
 
 // TODO Add plylogeny (separate workflow)
 
@@ -542,6 +572,13 @@ workflow {
                     igr_process.out.igr_all, igr_process.out.igr_bps,
                     snp_process.out.snp_abudance_all, snp_process.out.snp_abudance_bps,
                     model_building_script
+                    )
+    model_building_human( amr_process.out.amr_class_human,
+                    amr_process.out.amr_gene_human, 
+                    pv_process.out.pv_human,
+                    igr_process.out.igr_human, 
+                    snp_process.out.snp_abudance_human, 
+                    model_building_human_script
                     )
 }
 
