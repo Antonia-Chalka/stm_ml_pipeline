@@ -32,21 +32,38 @@ def helpMessage() {
   log.info """
         Usage:
         The typical command for running the pipeline is as follows:
-        
-        Mandatory arguments:
-         --query                        Query fasta file of sequences you wish to BLAST
-         --dbDir                        BLAST database directory (full path required)
-         --dbName                       Prefix name of the BLAST database
 
-       Optional arguments:
-        --outdir                       Output directory to place final BLAST output
-        --outfmt                       Output format ['6']
-        --options                      Additional options for BLAST command [-evalue 1e-3]
-        --outFileName                  Prefix name for BLAST output [input.blastout]
-        --threads                      Number of CPUs to use during blast job [16]
-        --chunkSize                    Number of fasta records to use when splitting the query fasta file
-        --app                          BLAST program to use [blastn;blastp,tblastn,blastx]
-        --help                         This usage statement.
+        --option                       Description/Notes [default value]
+
+    Mandatory arguments:
+         --assemblypath                Directory of your fasta files (full path required) [input_test]
+         --hostdata                    CSV file containing assembly filename, host, year and region [input_test/metadata.csv]
+
+    Optional arguments:
+        --outdir                       Output directory for models & other data [./out]
+        --snp_dist_threshold           SNP difference used to detect clonal clusters. Used in conjuction with region & collection year metadata. [10]
+    
+    Hostdata file options:
+        --assembly_column              Column name of your assemblies. Must contain extension eg myassembly.fasta ["Filename"]
+        --host_column                  Column name of your hosts ["Source.Host"]
+        --region_column                Column of region of origin. Used to detect clonal clusters. Can be empty throughout whole dataset. ["Region"]
+        --year_collection              Column of year each assembly was collected. Used to detect clonal clusters. Can be empty. ["Year"]
+
+    Assembly Quality Thresholds:
+        --as_ln_upr                    Maximum accepted assembly length [6000000]
+        --as_ln_lwr                    Minumum accepted assembly length [4000000]
+        --ctg_count                    Minimum accepted number of contigs [500]
+        --largest_ctg                  Minimum accepted length of largest contig [100000] 
+        --n50                          Minimum accepted n50 [50000]
+        --gc_upr                       Minimum accepted GC % [54]
+        --gc_lwr                       Maximum accepted GC % [50]
+
+    Tool-specific arguments:
+        --prokka_ref                   'Trusted' protein file for prokka (prokka --proteins) [./data/stm_proteinref.fasta]
+        --amr_species                  Assembly species for amrfinder (amrfinder -O) ["Salmonella"]
+        --panaroo_mode                 Panaroo assembly filtering mode (panaroo --clean-mode) ["moderate"]
+        --snp_ref                      Reference file for snippy (snippy --ref) [/data/stm_sl1344.fasta]
+        --threads                      Num of threads to use for panaroo & piggy (anaroo -t & piggy -t) [10]
         """
 }
 
@@ -55,7 +72,6 @@ if (params.help) {
     helpMessage()
     exit 0
 }
-
 
 ////////////////////// Modules ////////////////////////////////////////////////////////////////////////
 // Run Quast
