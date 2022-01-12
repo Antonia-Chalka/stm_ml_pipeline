@@ -2,55 +2,17 @@
 nextflow.enable.dsl=2
 
 ///////////////////////// Parameters /////////////////////////////////////////////////////////////////
-// Required params - defaults to testing data
-// HACK THE DIRECTORIES HAVE TO BE ABSOLUTE ONES
-params.outdir = "$projectDir/out"
-params.assemblypath = "$projectDir/input_test"
-params.hostdata = "$projectDir/input_test/metadata.csv"
-
-params.assembly_column="Filename"
-params.host_column="Source.Host"
-params.region_column="Region"
-params.year_collected="Year"
-params.check_clonal=true // placeholder - doesnt currently do anything
-
-params.snp_dist_threshold=10
-
-//params.fileextension="fasta" // HACK Seeting it up as anything non-fasta messes up the quast output
+// HACK Seeting it up as anything non-fasta messes up the quast output
 fileextension="fasta"
 
-// Assembly quality thresholds
-params.as_ln_upr = 6000000
-params.as_ln_lwr = 4000000
-params.ctg_count = 500
-params.largest_ctg = 100000
-params.n50 = 50000
-params.gc_upr = 54
-params.gc_lwr = 50
-
-// Computing parameters - 
-// TODO Improve implementation of inputted threads
-params.threads = 5
-params.model_threads=5
-
-// Prokka reference file - required
-params.prokka_ref = "$projectDir/data/stm_proteinref.fasta"
+// Use inputted prokka & snippy reference files
 prokka_ref_file = file(params.prokka_ref)
-
-// AMRfinder parameters
-params.amr_species='Salmonella'
-
-// Panaroo parameters
-params.panaroo_mode = 'moderate'
-
-// Snippy parameters
-params.snp_ref = "$projectDir/data/stm_sl1344.fasta"
 snp_ref_file = file(params.snp_ref)
 
-// Scoary hostfile script (Currently missing years/hosts cannot be clustered)
+// R script to generate scoary traitfile
 scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
 
-// R script for detection
+// R script for clonal detection
 clonal_detection_script=file("$projectDir/data/filter_script.R")
 
 // R scripts for model input processing
@@ -61,7 +23,57 @@ pv_process_script=file("$projectDir/data/input_pv.R")
 igr_process_script=file("$projectDir/data/input_igr.R")
 snps_process_script=file("$projectDir/data/input_snps.R")
 
+// R scripts for model building
 model_building_script=file("$projectDir/data/model_building.R")
+model_building_human_script=file("$projectDir/data/model_building_human.R")
+
+
+////////////////////// HELP Section //////////////////////////////////////////////
+// TODO Change help message 
+def helpMessage() {
+  log.info """
+        Usage:
+        The typical command for running the pipeline is as follows:
+
+        --option                       Description/Notes [default value]
+
+    Mandatory arguments:
+         --assemblypath                Directory of your fasta files (full path required) [input_test]
+         --hostdata                    CSV file containing assembly filename, host, year and region [input_test/metadata.csv]
+
+    Optional arguments:
+        --outdir                       Output directory for models & other data [./out]
+        --snp_dist_threshold           SNP difference used to detect clonal clusters. Used in conjuction with region & collection year metadata. [10]
+    
+    Hostdata file options:
+        --assembly_column              Column name of your assemblies. Must contain extension eg myassembly.fasta ["Filename"]
+        --host_column                  Column name of your hosts ["Source.Host"]
+        --region_column                Column of region of origin. Used to detect clonal clusters. Can be empty throughout whole dataset. ["Region"]
+        --year_collection              Column of year each assembly was collected. Used to detect clonal clusters. Can be empty. ["Year"]
+
+    Assembly Quality Thresholds:
+        --as_ln_upr                    Maximum accepted assembly length [6000000]
+        --as_ln_lwr                    Minumum accepted assembly length [4000000]
+        --ctg_count                    Minimum accepted number of contigs [500]
+        --largest_ctg                  Minimum accepted length of largest contig [100000] 
+        --n50                          Minimum accepted n50 [50000]
+        --gc_upr                       Minimum accepted GC % [54]
+        --gc_lwr                       Maximum accepted GC % [50]
+
+    Tool-specific arguments:
+        --prokka_ref                   'Trusted' protein file for prokka (prokka --proteins) [./data/stm_proteinref.fasta]
+        --amr_species                  Assembly species for amrfinder (amrfinder -O) ["Salmonella"]
+        --panaroo_mode                 Panaroo assembly filtering mode (panaroo --clean-mode) ["moderate"]
+        --snp_ref                      Reference file for snippy (snippy --ref) [/data/stm_sl1344.fasta]
+        --threads                      Num of threads to use for panaroo & piggy (anaroo -t & piggy -t) [10]
+        """
+}
+
+// Show help message
+if (params.help) {
+    helpMessage()
+    exit 0
+}
 
 ////////////////////// Modules ////////////////////////////////////////////////////////////////////////
 // Run Quast
@@ -401,8 +413,10 @@ process amr_process {
     output:
     path "amr_gene_all.tsv", emit: amr_gene_all
     path "amr_gene_bps.tsv", emit: amr_gene_bps
+    path "amr_gene_human.tsv", emit: amr_gene_human
     path "amr_class_all.tsv", emit: amr_class_all
     path "amr_class_bps.tsv", emit: amr_class_bps
+    path "amr_class_human.tsv", emit: amr_class_human
 
     script:
     """
@@ -424,6 +438,7 @@ process igr_process {
     output:
     path "igr_all.tsv", emit: igr_all
     path "igr_bps.tsv", emit: igr_bps
+    path "igr_human.tsv", emit: igr_human
 
     script:
     """
@@ -452,6 +467,7 @@ process pv_process {
     output:
     path "pv_all.tsv", emit: pv_all
     path "pv_bps.tsv", emit: pv_bps
+    path "pv_human.tsv", emit: pv_human
 
     script:
     """
@@ -479,6 +495,7 @@ process snp_process {
     output:
     path "snp_abudance_all.tsv", emit: snp_abudance_all
     path "snp_abudance_bps.tsv", emit: snp_abudance_bps
+    path "snp_abudance_human.tsv", emit: snp_abudance_human
 
     script:
     """
@@ -486,7 +503,7 @@ process snp_process {
     """
 }
 
-// Model generation
+// Model generation - Host/Source Attribution
 process model_building {
     publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
     publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
@@ -517,6 +534,30 @@ process model_building {
     """
 }
 
+// Model generation - Human scoring models
+process model_building_human {
+    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
+    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
+    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: "*.png"
+
+    input:
+    path amr_class_human
+    path amr_gene_human
+    path pv_human
+    path igr_human
+    path snp_abudance_human
+    path model_building_human_script
+
+    output:
+    path "*.rds", emit: models
+    path "*.csv", emit: predictions
+    path "*.png", emit: plots
+
+    script:
+    """
+    Rscript --vanilla $model_building_human_script $amr_class_human $amr_gene_human $pv_human $igr_human $snp_abudance_human $params.model_threads
+    """
+}
 
 // TODO Add plylogeny (separate workflow)
 
@@ -554,6 +595,13 @@ workflow {
                     igr_process.out.igr_all, igr_process.out.igr_bps,
                     snp_process.out.snp_abudance_all, snp_process.out.snp_abudance_bps,
                     model_building_script
+                    )
+    model_building_human( amr_process.out.amr_class_human,
+                    amr_process.out.amr_gene_human, 
+                    pv_process.out.pv_human,
+                    igr_process.out.igr_human, 
+                    snp_process.out.snp_abudance_human, 
+                    model_building_human_script
                     )
 }
 
