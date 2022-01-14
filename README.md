@@ -18,7 +18,7 @@ docker pull staphb/quast:5.0.2
 docker pull staphb/prokka:1.14.5
 docker pull staphb/ncbi-amrfinderplus:3.10.5
 docker pull staphb/piggy:1.5
-docker pull quay.io/biocontainers/panaroo:1.2.3--py_0
+docker pull quay.io/biocontainers/panaroo:1.2.9--pyhdfd78af_0
 docker pull staphb/snippy:4.6.0
 docker pull rocker/tidyverse:4.0.5
 docker pull quay.io/biocontainers/scoary:1.6.16--py_2
@@ -34,9 +34,9 @@ Simplest way to run:
 
 More advanced run:
 
-`nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --snp_dist_threshold=100 --year_collected="Year.Obtained" --panaroo_mode='strict`
+`nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --snp_dist_threshold=100 --year_collected="Year.Obtained" --panaroo_mode='strict` -resume
 
-### Required Parameters
+## Required Inputs
 
 `--assemblypath` : Folder where your assemblies are kept.
 
@@ -56,7 +56,7 @@ More advanced run:
 
 Please refer to the metadata.csv file inside the input test folder for an example.
 
-### Additional Parameters
+## Additional Parameters/Inputs
  TODO ADD OPTIONAL PARAMETER GUIDE
   https://github.com/AdmiralenOla/Scoary/blob/master/README.md
 
@@ -83,6 +83,8 @@ Please refer to the metadata.csv file inside the input test folder for an exampl
 `--amr_species`='Salmonella'
 `--panaroo_mode` = 'moderate'
 
+## Outputs
+
 
 ## Workflow Outline
 
@@ -106,8 +108,4 @@ Succeeded   : 80
 ```
 
 My STm Dataset (3313 assemblies that pass qc, ~2.2k nonclonal):
-<<<<<<< HEAD
 TODO add benchmarks for big dataset
-=======
-TODO 
->>>>>>> 5132a4b387606d35283c27c01a84a8e839038c52
