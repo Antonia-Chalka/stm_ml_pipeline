@@ -1,4 +1,5 @@
 library(tidyverse)
+library(data.table)
 set.seed(100)
 
 args = commandArgs(trailingOnly=TRUE)
@@ -21,8 +22,12 @@ metadata_nonclonal <- read.csv(args[2]) %>%
 # Count SNP abudance
 snp_all_counts <-  snippy_all %>% 
   pivot_longer(-c("CHR","POS")) %>% 
-  filter(name!="REF") %>% 
-  count(CHR, POS, value) 
+  filter(name!="REF") 
+
+snp_all_counts <- data.table(snp_all_counts)
+snp_all_counts<- snp_all_counts[, .N, by=list(CHR, POS, value)] %>% 
+  rename(n=N)
+
 # calculate thresholsd (num of assemblies)
 abudance_lower <- round(nrow(metadata_nonclonal)/100 *1)
 abudance_upper <- round(nrow(metadata_nonclonal)/100 *99)
