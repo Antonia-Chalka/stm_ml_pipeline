@@ -1,12 +1,7 @@
 work/*
 .nextflow.log*
 .nextflow/*
-out/*
-data/scripts/*
-data/docker_images/backup_images/quay.io-biocontainers-panaroo-1.2.3--py_0.tar
-data/docker_images/backup_images/staph-piggy-1.5.tar
-data/docker_images/backup_images/staphb-ncbi-amrfinderplus-3.10.5.tar
-data/docker_images/backup_images/staphb-prokka-1.14.5.tar
-data/docker_images/backup_images/staphb-quast-5.0.2.tar
-data/docker_images/backup_images/staphb-snippy-4.6.0
+data/docker_images/*
 .vscode/settings.json
+test_data/model_build_out/*
+test_data/model_input_out/*

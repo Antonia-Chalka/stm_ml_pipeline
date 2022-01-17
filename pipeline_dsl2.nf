@@ -1,35 +1,8 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-///////////////////////// Parameters /////////////////////////////////////////////////////////////////
-// HACK Seeting it up as anything non-fasta messes up the quast output
-fileextension="fasta"
-
-// Use inputted prokka & snippy reference files
-prokka_ref_file = file(params.prokka_ref)
-snp_ref_file = file(params.snp_ref)
-
-// R script to generate scoary traitfile
-scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
-
-// R script for clonal detection
-clonal_detection_script=file("$projectDir/data/filter_script.R")
-
-// R scripts for model input processing
-params.scoarycutoff=1.1
-
-amr_process_script=file("$projectDir/data/input_amr.R")
-pv_process_script=file("$projectDir/data/input_pv.R")
-igr_process_script=file("$projectDir/data/input_igr.R")
-snps_process_script=file("$projectDir/data/input_snps.R")
-
-// R scripts for model building
-model_building_script=file("$projectDir/data/model_building.R")
-model_building_human_script=file("$projectDir/data/model_building_human.R")
-
-
 ////////////////////// HELP Section //////////////////////////////////////////////
-// TODO Change help message 
+// TODO UPDATE HELP MESSAGE (new defaults + additional workflow options)
 def helpMessage() {
   log.info """
         Usage:
@@ -98,10 +71,26 @@ include { snp_process                 } from "$projectDir/modules/snp_process.nf
 include { model_building              } from "$projectDir/modules/model_building.nf"
 include { model_building_human        } from "$projectDir/modules/model_building_human.nf"
 
+
+///////////////////////// Parameters /////////////////////////////////////////////////////////////////
+// HACK Seeting it up as anything non-fasta messes up the quast output
+
+// Reference & R script files
+prokka_ref_file = file(params.prokka_ref)
+snp_ref_file = file(params.snp_ref)
+scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
+clonal_detection_script=file("$projectDir/data/filter_script.R")
+amr_process_script=file("$projectDir/data/input_amr.R")
+pv_process_script=file("$projectDir/data/input_pv.R")
+igr_process_script=file("$projectDir/data/input_igr.R")
+snps_process_script=file("$projectDir/data/input_snps.R")
+model_building_script=file("$projectDir/data/model_building.R")
+model_building_human_script=file("$projectDir/data/model_building_human.R")
+
 // TODO Add plylogeny (separate workflow)
 
 ///////////////////////////////     WORKFLOW    ////////////////////////////////////////////////////////////////////////////////////////////
-assemblies = Channel.fromPath("${params.assemblypath}/*.${fileextension}")
+assemblies = Channel.fromPath("${params.assemblypath}/*.${params.fileextension}")
 metadata_file = file(params.hostdata)
 
 workflow {
