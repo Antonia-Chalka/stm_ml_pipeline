@@ -1,8 +1,7 @@
 library(tidyverse)
 library(randomForest)
 library(caret)
-#library(doParallel)
-#library(pROC)
+library(doParallel)
 
 set.seed(100)
 
@@ -70,8 +69,8 @@ i = 1
 for (x in input_all) {
   #Initialise cluster
   # Set up parallel computing ####
-  #cl <- makePSOCKcluster(args[11])
-  #registerDoParallel(cl)
+  cl <- makePSOCKcluster(args[11])
+  registerDoParallel(cl)
   
   # Hyperparameter testing
   control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid", p=0.75, savePredictions="final", classProbs = TRUE)
@@ -95,15 +94,15 @@ for (x in input_all) {
   prediction_class_all <- rbind(prediction_class_all, prediction_class)
   
   i = i + 1
-  #stopCluster(cl)
+  stopCluster(cl)
 }
 
 ######## BPS Models #########
 i = 1
 for (x in input_bps) {
   #Initialise cluster
-  #cl <- makePSOCKcluster(args[11])
-  #registerDoParallel(cl)
+  cl <- makePSOCKcluster(args[11])
+  registerDoParallel(cl)
   
   # Hyperparameter testing
   control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid", p=0.75, savePredictions="final", classProbs = TRUE)
@@ -127,7 +126,7 @@ for (x in input_bps) {
   prediction_class_all <- rbind(prediction_class_all, prediction_class)
   
   i = i + 1
-  #stopCluster(cl)
+  stopCluster(cl)
 }
 
 # save prediction scores here ####
