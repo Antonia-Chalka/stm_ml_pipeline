@@ -14,16 +14,20 @@ TODO Add citation
 * Pull Required Docker/Singularity Images
 
 ``` bash
-docker pull staphb/quast:5.0.2 ;
-docker pull staphb/prokka:1.14.5 ; 
-docker pull staphb/ncbi-amrfinderplus:3.10.5 ; 
-docker pull staphb/piggy:1.5 ; 
-docker pull quay.io/biocontainers/panaroo:1.2.9--pyhdfd78af_0 ; 
-docker pull staphb/snippy:4.6.0 ; 
-docker pull rocker/tidyverse:4.0.5 ; 
-docker pull quay.io/biocontainers/scoary:1.6.16--py_2 ; 
-docker pull staphb/snp-dists:0.8.2 ; 
-docker pull annitachalka/r_model_build:1.01
+docker pull staphb/quast:5.0.2 
+docker pull staphb/prokka:1.14.5  
+docker pull staphb/ncbi-amrfinderplus:3.10.5  
+docker pull staphb/piggy:1.5 
+docker pull quay.io/biocontainers/panaroo:1.2.9--pyhdfd78af_0 
+docker pull staphb/snippy:4.6.0 
+docker pull rocker/tidyverse:4.0.5  
+docker pull quay.io/biocontainers/scoary:1.6.16--py_2  
+docker pull staphb/snp-dists:0.8.2 
+docker pull annitachalka/r_model_build:1.01 
+docker pull ncbi/blast:2.12.0
+docker pull staphb/seqtk:1.3
+
+
 
 singularity pull docker://staphb/quast:5.0.2  ;
 singularity pull docker://staphb/prokka:1.14.5 ; 
@@ -35,6 +39,9 @@ singularity pull docker://rocker/tidyverse:4.0.5 ;
 singularity pull docker://quay.io/biocontainers/scoary:1.6.16--py_2 ; 
 singularity pull docker://staphb/snp-dists:0.8.2 ; 
 singularity pull docker://annitachalka/r_model_build:1.01
+TODO  singularity pull docker://ncbi/blast:2.12.0
+singularity pull docker://ncbi/staphb/seqtk:1.3
+
 ```
 
 ## Usage
