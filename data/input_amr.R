@@ -47,6 +47,6 @@ amr_class_metadata_bps <- amr_class_metadata_all %>%
 write.table(amr_class_metadata_bps, file="./amr_class_bps.tsv", sep="\t")
 
 # Human vs Non Human
-amr_class_metadata_human <- amr_class_metadata_bps %>%
+amr_class_metadata_human <- amr_class_metadata_all %>%
   mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
 write.table(amr_class_metadata_human, file="./amr_class_human.tsv", sep="\t")

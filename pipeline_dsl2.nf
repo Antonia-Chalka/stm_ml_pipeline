@@ -1,35 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-///////////////////////// Parameters /////////////////////////////////////////////////////////////////
-// HACK Seeting it up as anything non-fasta messes up the quast output
-fileextension="fasta"
-
-// Use inputted prokka & snippy reference files
-prokka_ref_file = file(params.prokka_ref)
-snp_ref_file = file(params.snp_ref)
-
-// R script to generate scoary traitfile
-scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
-
-// R script for clonal detection
-clonal_detection_script=file("$projectDir/data/filter_script.R")
-
-// R scripts for model input processing
-params.scoarycutoff=1.1
-
-amr_process_script=file("$projectDir/data/input_amr.R")
-pv_process_script=file("$projectDir/data/input_pv.R")
-igr_process_script=file("$projectDir/data/input_igr.R")
-snps_process_script=file("$projectDir/data/input_snps.R")
-
-// R scripts for model building
-model_building_script=file("$projectDir/data/model_building.R")
-model_building_human_script=file("$projectDir/data/model_building_human.R")
-
-
-////////////////////// HELP Section //////////////////////////////////////////////
-// TODO Change help message 
+// TODO UPDATE HELP MESSAGE (new defaults + additional workflow options)
 def helpMessage() {
   log.info """
         Usage:
@@ -75,494 +47,45 @@ if (params.help) {
     exit 0
 }
 
-////////////////////// Modules ////////////////////////////////////////////////////////////////////////
-// Run Quast
-process assembly_qc {
-    cache 'lenient'
-
-    input:
-    path assembly
-
-    output:
-    path "${assembly.baseName}_qc/transposed_report.tsv"
-
-    script:
-    """
-    quast.py  -o "${assembly.baseName}_qc" "${assembly}" 
-    """
-}
-
-// Filter assemblies based on quast-derived metrics
-process printqc {
-    publishDir  "${params.outdir}/good_assemblies", mode: 'copy', overwrite: true, pattern : "*.${fileextension}"
-    cache 'lenient'
-
-    input:
-    path qcs
-    path metadata_file
-
-    output:
-    path "*.${fileextension}", emit: good_assemblies
-    path 'good_noext_metadata.csv', emit: good_metadata
-    path 'pass_qc.tsv', emit: good_assemblies_list
-
-    script:
-    """
-    # Create list of assemblies that pass qc & Copy them
-    awk -F "\t" '{ if((\$2 < $params.ctg_count) && (\$8 > $params.as_ln_lwr && \$8 < $params.as_ln_upr) && (\$15 > $params.largest_ctg) && (\$17 > $params.gc_lwr && \$17 < $params.gc_upr) && (\$18 > $params.n50)) { print } }' $qcs > pass_qc.tsv
-    for assembly_name in `cut -f1 pass_qc.tsv`
-    do 
-        ln -s ${params.assemblypath}/\${assembly_name}.${fileextension} \${assembly_name}.${fileextension}
-    done
-
-    # Create list from good assemblies & create a new metadata file of the filtered results
-    ls *.${fileextension} > good_assemblies.txt
-    awk -F',' 'NR==FNR{c[\$1]++;next};c[\$1] > 0' good_assemblies.txt $metadata_file > good_metadata.csv
-    # Add headers to new metadata file by copying the first line of the orginal metadata file
-    printf '%s\n' '0r !head -n 1 $metadata_file' x | ex good_metadata.csv 
-
-    # Remove extensions from metadata file
-    awk '{ gsub(/\\.${fileextension}/,"", \$1); print }' good_metadata.csv  > good_noext_metadata.csv
-    """
-}
-
-// Annotate via prokka. Reference protein file required
-process prokka_annotation {
-    publishDir  "${params.outdir}/annotation", mode: 'copy', overwrite: true
-    cache 'lenient'
-
-    input:
-    path good_qc_assembly 
-    path prokka_ref_file
-
-    output:
-    path "${good_qc_assembly.baseName}/${good_qc_assembly.baseName}.gff", emit:annotation
-    path "${good_qc_assembly.baseName}/${good_qc_assembly.baseName}.faa", emit:transl_protein
-    path "${good_qc_assembly.baseName}/${good_qc_assembly.baseName}.fna", emit:nucleotide
-
-    script:
-    """
-    prokka --prefix "${good_qc_assembly.baseName}" --force --proteins ${prokka_ref_file} --centre X --compliant ${good_qc_assembly}
-    """
-}
-
-// Run Amrfinder using all possible inputs (assembly, ggff, and trans portein files)
-process amrfinder {
-    cache 'lenient'
-
-    input:
-    path annotation 
-    path trans_protein 
-    path nucleotide 
-
-    output:
-    path "${annotation.baseName}_amr.tsv" 
-
-    script:
-    """
-    # Convert the prokka generated gff into a format amrfinder accepts
-    perl -pe '/^##FASTA/ && exit; s/(\\W)Name=/\$1OldName=/i; s/ID=([^;]+)/ID=\$1;Name=\$1/' $annotation  > amrfinder.gff
-
-    amrfinder -p ${trans_protein} -g amrfinder.gff -n ${nucleotide} -O ${params.amr_species} -o "${annotation.baseName}_amr.tsv" --name --plus
-    """
-}
-
-// scoary filtering - make traitfile(Assembly,[Hosts]]) via r script
-process gen_scoary_traitfile {
-    publishDir  "${params.outdir}/", mode: 'copy', overwrite: true
-    cache 'lenient'
-
-    input:
-    path metadata
-    path scoary_datagen_file
-
-    output:
-    path "./scoary_traitfile.csv" 
-
-    script:
-    """
-    Rscript --vanilla $scoary_datagen_file $metadata $params.assembly_column $params.host_column
-    """
-}
-
-// Run panaroo 
-process panaroo {
-    publishDir  "${params.outdir}/panaroo_out", mode: 'copy', overwrite: true
-    cache 'lenient'
-
-    input:
-    path annotations //from annotation_panaroo.collect()
-
-    output:
-    path "panaroo_out/gene_presence_absence_roary.csv", emit: pv_csv
-    path "panaroo_out/gene_presence_absence.Rtab", emit: pv_rtab
-    path "roary_out/", emit: roary_dir
-
-    script:
-    """
-    panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate -t $params.threads --remove-invalid-genes
-    mkdir ./roary_out
-    cp  ./panaroo_out/gene_presence_absence_roary.csv ./roary_out/gene_presence_absence.csv
-    """
-}
-
-// Filter panaroo output (pvs) with scoary
-process scoary_pv {
-    publishDir  "${params.outdir}/scoary_pv", mode: 'copy', overwrite: true
-    cache 'lenient'
-
-    input:
-    path pv_coll_traitfile
-    path pvs 
-
-    output:
-    path '*.results.csv' 
-
-    script:
-    """
-    scoary -t $pv_coll_traitfile -g $pvs --no-time --collapse -p 1.0
-    """
-}
-
-// Run piggy (extracts intergenic regions)
-process piggy {
-    publishDir  "${params.outdir}", mode: 'copy', overwrite: true
-    cache 'lenient'
-
-    input:
-    path annotations // from annotation_piggy.collect()
-    path roary_dir 
-
-    output:
-    path "./piggy_out/IGR_presence_absence.csv", emit: piggy_csv
-    path "./piggy_out/IGR_presence_absence.Rtab", emit: piggy_rtab
-
-    script:
-    """
-    piggy -r "${roary_dir}" -i . -t $params.threads
-    """
-}
-
-// Filter piggy output (igrs) with scoary
-process scoary_igr {
-    publishDir  "${params.outdir}/scoary_igr", mode: 'copy', overwrite: true
-    cache 'lenient'
-
-    input:
-    path igr_coll_traitfile
-    path igrs 
-
-    output:
-    path '*.results.csv' 
-
-    script:
-    """
-    scoary -t $igr_coll_traitfile -g $igrs --no-time --collapse -p 1.0
-    """
-}
-
-// snippy
-process snippy {
-    cache 'lenient'
-
-    input:
-    path assembly 
-    path snp_ref_file
-
-    output:
-    path "./${assembly.baseName}/" 
-
-    script:
-    """
-    snippy --prefix "${assembly.baseName}" --outdir "${assembly.baseName}" --ref  "${snp_ref_file}" --ctgs "${assembly}" --force
-    """
-}
-
-// Get core SNPs
-process snippy_core {
-    publishDir  "${params.outdir}/snippy_core_out", mode: 'copy', overwrite: true
-    cache 'lenient'
-
-    input:
-    path snippy_folders
-    path snp_ref_file
-
-    output:
-    path 'core.tab', emit: core_snps
-    path 'core.aln', emit: aligned_snps
-
-    script:
-    """
-    snippy-core --prefix core --ref "${snp_ref_file}" ${snippy_folders}
-    """
-}
-
-// Get SNP distance of assemblies to use in nonclonal filtering
-process snp_dists {
-    cache 'lenient'
-
-    input:
-    path snp_core_aln 
-
-    output:
-    path 'snpdist_base.tsv' 
-
-    script:
-    """
-    snp-dists -m $snp_core_aln > snpdist_base.tsv
-    """
-}
-
-// Filter for snps
-// HACK If no clusters are detected, no list file is produced. so a blank one has been used for now
-process clonal_detection {
-    publishDir  "${params.outdir}/clonal_detection", mode: 'copy', overwrite: true, pattern : "*.png"
-    cache 'lenient'
-
-    input:
-    path clonal_detection_script
-    path metadata
-    path snp_dist_file 
-
-    output:
-    path "*.list"
-
-    script:
-    """
-    touch empty.list
-    Rscript --vanilla $clonal_detection_script $snp_dist_file $metadata $params.assembly_column $params.host_column $params.year_collected $params.region_column $params.snp_dist_threshold
-    """
-}
-
-process clonal_filtering {
-    publishDir  "${params.outdir}/clonal_detection", mode: 'copy', overwrite: true, pattern : "*.txt"
-    cache 'lenient'
-    
-    input:
-    path clusters
-    path good_assemblies_list
-    path metadata
-
-    output:
-    path "good_nonclonal_metadata.csv"
-
-    script:
-    """
-    cut -f1 ${good_assemblies_list} > good_assemblies_all.lst
-    cat *.list > cluster_all.txt
-
-    # If no clonal clusters were detected, exit
-    if ! [ -s "cluster_all.txt" ];then
-        cat $metadata > good_nonclonal_metadata.csv 
-        exit
-    fi
-
-    # Pick 1 random line from the input file (use as chsen seqs)
-    for file in *.list; 
-    do 
-        head -\$((\${RANDOM} % `wc -l < "\$file"` + 1)) "\$file" | tail -1
-    done > cluster_chosen.txt
-
-    # take intersection of above filen
-    grep -Fxvf cluster_chosen.txt cluster_all.txt > cluster_discarded.txt
-    
-    # generate list of all sequences without discarded
-    grep -vf cluster_discarded.txt  good_assemblies_all.lst  > all_nonclonal.txt
-
-    # Create a new metadata file of the filtered results & add headers
-    awk -F',' 'NR==FNR{c[\$1]++;next};c[\$1] > 0' all_nonclonal.txt $metadata > good_nonclonal_metadata.csv 
-    printf '%s\n' '0r !head -n 1 $metadata' x | ex good_nonclonal_metadata.csv 
-    """
-}
-
-//Concantenate all amr files
-process amr_collect {
-    publishDir  "${params.outdir}/amr_out", mode: 'copy', overwrite: true, pattern : "amr_all.tsv"
-    cache 'lenient'
-
-    input:
-    path amr_files
-
-    output:
-    path "amr_all.tsv"
-
-    script:
-    """
-    for file in *.tsv
-    do
-        name=\${file%_amr.tsv}
-        sed -i '1d' \$file
-        sed "s/\$/\t\$name/" "\$file"
-    done > amr_all.tsv
-
-    # Add headers
-    sed -i.bak 1i"Name\tProtein identifier\tContig id\tStart\tStop\tStrand\tGene symbol\tSequence name\tScope\tElement.type\tElement subtype\tClass\tSubclass\tMethod\tTarget length\tReference sequence length\t% Coverage of reference sequence\t% Identity to reference sequence\tAlignment length\tAccession of closest sequence\tName of closest sequence\tHMM id\tHMM description\tFilename" amr_all.tsv
-    """
-}
-
-// Process AMR Data for model generation
-process amr_process {
-    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
-    cache 'lenient'
-
-    input:
-    path amr_process_script
-    path amr_file_all
-    path good_nonclonal_metadata
-    
-    output:
-    path "amr_gene_all.tsv", emit: amr_gene_all
-    path "amr_gene_bps.tsv", emit: amr_gene_bps
-    path "amr_gene_human.tsv", emit: amr_gene_human
-    path "amr_class_all.tsv", emit: amr_class_all
-    path "amr_class_bps.tsv", emit: amr_class_bps
-    path "amr_class_human.tsv", emit: amr_class_human
-
-    script:
-    """
-    Rscript --vanilla $amr_process_script ${amr_file_all} ${good_nonclonal_metadata} $params.assembly_column $params.host_column
-    """
-}
-
-//IGR Processing
-process igr_process {
-    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
-    cache 'lenient'
-
-    input:
-    path igr_process_script
-    path igr_file_all
-    path scoary_files
-    path good_nonclonal_metadata
-    
-    output:
-    path "igr_all.tsv", emit: igr_all
-    path "igr_bps.tsv", emit: igr_bps
-    path "igr_human.tsv", emit: igr_human
-
-    script:
-    """
-    # Combine all scoary files into one & add headers
-    for file in *.results.csv
-    do
-        sed '1d' \$file >>  scoary_all.csv
-    done 
-    sed -i "1s/^/\$(head -n1 \$file)\\n/" scoary_all.csv
-
-    Rscript --vanilla $igr_process_script ${igr_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column $params.scoarycutoff
-    """
-}
-
-// PV Processing
-process pv_process {
-    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
-    cache 'lenient'
-
-    input:
-    path pv_process_script
-    path pv_file_all
-    path scoary_files
-    path good_nonclonal_metadata
-    
-    output:
-    path "pv_all.tsv", emit: pv_all
-    path "pv_bps.tsv", emit: pv_bps
-    path "pv_human.tsv", emit: pv_human
-
-    script:
-    """
-    # Combine all scoary files into one & add headers
-    for file in *.results.csv
-    do
-        sed '1d' \$file >>  scoary_all.csv
-    done 
-    sed -i "1s/^/\$(head -n1 \$file)\\n/" scoary_all.csv
-
-    Rscript --vanilla $pv_process_script ${pv_file_all} scoary_all.csv ${good_nonclonal_metadata} $params.assembly_column $params.host_column $params.scoarycutoff
-    """
-}
-
-// SNP processing
-process snp_process {
-    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
-    cache 'lenient'
-
-    input:
-    path snps_process_script
-    path snp_core
-    path good_nonclonal_metadata
-    
-    output:
-    path "snp_abudance_all.tsv", emit: snp_abudance_all
-    path "snp_abudance_bps.tsv", emit: snp_abudance_bps
-    path "snp_abudance_human.tsv", emit: snp_abudance_human
-
-    script:
-    """
-    Rscript --vanilla $snps_process_script $snp_core $good_nonclonal_metadata $params.assembly_column $params.host_column
-    """
-}
-
-// Model generation - Host/Source Attribution
-process model_building {
-    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
-    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
-    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: "*.png"
-    cache 'lenient'
-
-    input:
-    path amr_class_all
-    path amr_class_bps
-    path amr_gene_all
-    path amr_gene_bps
-    path pv_all
-    path pv_bps
-    path igr_all
-    path igr_bps
-    path snp_abudance_all
-    path snp_abudance_bps
-    path model_building_script
-
-    output:
-    path "*.rds", emit: models
-    path "*.csv", emit: predictions
-    path "*.png", emit: plots
-
-    script:
-    """
-    Rscript --vanilla $model_building_script $amr_class_all $amr_class_bps $amr_gene_all $amr_gene_bps $pv_all $pv_bps $igr_all $igr_bps $snp_abudance_all $snp_abudance_bps $params.model_threads
-    """
-}
-
-// Model generation - Human scoring models
-process model_building_human {
-    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
-    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
-    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: "*.png"
-
-    input:
-    path amr_class_human
-    path amr_gene_human
-    path pv_human
-    path igr_human
-    path snp_abudance_human
-    path model_building_human_script
-
-    output:
-    path "*.rds", emit: models
-    path "*.csv", emit: predictions
-    path "*.png", emit: plots
-
-    script:
-    """
-    Rscript --vanilla $model_building_human_script $amr_class_human $amr_gene_human $pv_human $igr_human $snp_abudance_human $params.model_threads
-    """
-}
+// Modules 
+include { assembly_qc                 } from "$projectDir/modules/assembly_qc.nf"
+include { printqc                     } from "$projectDir/modules/printqc.nf"
+include { prokka_annotation           } from "$projectDir/modules/prokka_annotation.nf"
+include { amrfinder                   } from "$projectDir/modules/amrfinder.nf"
+include { gen_scoary_traitfile        } from "$projectDir/modules/gen_scoary_traitfile.nf"
+include { panaroo                     } from "$projectDir/modules/panaroo.nf"
+include { piggy                       } from "$projectDir/modules/piggy.nf"
+include { scoary_pv                   } from "$projectDir/modules/scoary_pv.nf"
+include { scoary_igr                  } from "$projectDir/modules/scoary_igr.nf"
+include { snippy                      } from "$projectDir/modules/snippy.nf"
+include { snippy_core                 } from "$projectDir/modules/snippy_core.nf"
+include { snp_dists                   } from "$projectDir/modules/snp_dists.nf"
+include { clonal_detection            } from "$projectDir/modules/clonal_detection.nf"
+include { clonal_filtering            } from "$projectDir/modules/clonal_filtering.nf"
+include { amr_collect                 } from "$projectDir/modules/amr_collect.nf"
+include { amr_process                 } from "$projectDir/modules/amr_process.nf"
+include { igr_process                 } from "$projectDir/modules/igr_process.nf"
+include { pv_process                  } from "$projectDir/modules/pv_process.nf"
+include { snp_process                 } from "$projectDir/modules/snp_process.nf"
+include { model_building              } from "$projectDir/modules/model_building.nf"
+include { model_building_human        } from "$projectDir/modules/model_building_human.nf"
+
+// Reference & R script files
+prokka_ref_file = file(params.prokka_ref)
+snp_ref_file = file(params.snp_ref)
+scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
+clonal_detection_script=file("$projectDir/data/filter_script.R")
+amr_process_script=file("$projectDir/data/input_amr.R")
+pv_process_script=file("$projectDir/data/input_pv.R")
+igr_process_script=file("$projectDir/data/input_igr.R")
+snps_process_script=file("$projectDir/data/input_snps.R")
+model_building_script=file("$projectDir/data/model_building.R")
+model_building_human_script=file("$projectDir/data/model_building_human.R")
 
 // TODO Add plylogeny (separate workflow)
 
 ///////////////////////////////     WORKFLOW    ////////////////////////////////////////////////////////////////////////////////////////////
-assemblies = Channel.fromPath("${params.assemblypath}/*.${fileextension}")
+assemblies = Channel.fromPath("${params.assemblypath}/*.${params.fileextension}")
 metadata_file = file(params.hostdata)
 
 workflow {
@@ -581,7 +104,7 @@ workflow {
 
     snp_dists(snippy_core.out.aligned_snps)
     clonal_detection(clonal_detection_script, printqc.out.good_metadata, snp_dists.out)
-    clonal_filtering(clonal_detection.out, printqc.out.good_assemblies_list, printqc.out.good_metadata)
+    clonal_filtering(clonal_detection.out.clusters, printqc.out.good_assemblies_list, printqc.out.good_metadata)
 
     amr_collect(amrfinder.out.collect())
     amr_process(amr_process_script, amr_collect.out, clonal_filtering.out)
@@ -603,14 +126,8 @@ workflow {
                     snp_process.out.snp_abudance_human, 
                     model_building_human_script
                     )
+
+    
 }
 
-// TODO Break up into subworkflows (one where it doesnt check for clonal)
-/*
-workflow model_prep {
-    if( params.check_clonal )  // defaults to true 
-        bar(params.data)
-    else
-        bar(foo()) }
-*/
 // TODO Add workflow for inputting new data
