@@ -9,6 +9,7 @@ process panaroo {
     output:
     path "panaroo_out/gene_presence_absence_roary.csv", emit: pv_csv
     path "panaroo_out/gene_presence_absence.Rtab", emit: pv_rtab
+    path "panaroo_out/pan_genome_reference.fa", emit: pv_ref
     path "roary_out/", emit: roary_dir
 
     script:

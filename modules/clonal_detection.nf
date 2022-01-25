@@ -1,7 +1,9 @@
 // Filter for snps
 // HACK If no clusters are detected, no list file is produced. so a blank one has been used for now
 process clonal_detection {
-    publishDir  "${params.outdir}/clonal_detection", mode: 'copy', overwrite: true, pattern : "*.png"
+    publishDir  "${params.outdir}/clonal_detection", mode: 'copy', overwrite: true, pattern : '*.png'
+    publishDir  "${params.outdir}/clonal_detection/clusters", mode: 'copy', overwrite: true, pattern : '*.list'
+
     cache 'lenient'
 
     input:
@@ -10,7 +12,8 @@ process clonal_detection {
     path snp_dist_file 
 
     output:
-    path "*.list"
+    path '*.list', emit: clusters
+    path '*.png', emit: cluster_graph
 
     script:
     """

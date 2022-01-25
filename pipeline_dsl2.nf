@@ -1,7 +1,6 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl=2
 
-////////////////////// HELP Section //////////////////////////////////////////////
 // TODO UPDATE HELP MESSAGE (new defaults + additional workflow options)
 def helpMessage() {
   log.info """
@@ -48,7 +47,7 @@ if (params.help) {
     exit 0
 }
 
-////////////////////// Modules ////////////////////////////////////////////////////////////////////////
+// Modules 
 include { assembly_qc                 } from "$projectDir/modules/assembly_qc.nf"
 include { printqc                     } from "$projectDir/modules/printqc.nf"
 include { prokka_annotation           } from "$projectDir/modules/prokka_annotation.nf"
@@ -70,10 +69,6 @@ include { pv_process                  } from "$projectDir/modules/pv_process.nf"
 include { snp_process                 } from "$projectDir/modules/snp_process.nf"
 include { model_building              } from "$projectDir/modules/model_building.nf"
 include { model_building_human        } from "$projectDir/modules/model_building_human.nf"
-
-
-///////////////////////// Parameters /////////////////////////////////////////////////////////////////
-// HACK Seeting it up as anything non-fasta messes up the quast output
 
 // Reference & R script files
 prokka_ref_file = file(params.prokka_ref)
@@ -109,7 +104,7 @@ workflow {
 
     snp_dists(snippy_core.out.aligned_snps)
     clonal_detection(clonal_detection_script, printqc.out.good_metadata, snp_dists.out)
-    clonal_filtering(clonal_detection.out, printqc.out.good_assemblies_list, printqc.out.good_metadata)
+    clonal_filtering(clonal_detection.out.clusters, printqc.out.good_assemblies_list, printqc.out.good_metadata)
 
     amr_collect(amrfinder.out.collect())
     amr_process(amr_process_script, amr_collect.out, clonal_filtering.out)
@@ -131,14 +126,8 @@ workflow {
                     snp_process.out.snp_abudance_human, 
                     model_building_human_script
                     )
+
+    
 }
 
-// TODO Break up into subworkflows (one where it doesnt check for clonal)
-/*
-workflow model_prep {
-    if( params.check_clonal )  // defaults to true 
-        bar(params.data)
-    else
-        bar(foo()) }
-*/
 // TODO Add workflow for inputting new data

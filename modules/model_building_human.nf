@@ -1,8 +1,8 @@
 // Model generation - Human scoring models
 process model_building_human {
-    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
-    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
-    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: "*.png"
+    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: '*.rds'
+    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: '*.csv'
+    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: '*.png'
 
     input:
     path amr_class_human
@@ -13,9 +13,9 @@ process model_building_human {
     path model_building_human_script
 
     output:
-    path "*.rds", emit: models
-    path "*.csv", emit: predictions
-    path "*.png", emit: plots
+    path '*.rds', emit: models
+    path '*.csv', emit: predictions
+    path '*.png', emit: plots
 
     script:
     """

@@ -1,8 +1,8 @@
 // Model generation - Host/Source Attribution
 process model_building {
-    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: "*.rds"
-    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: "*.csv"
-    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: "*.png"
+    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: '*.rds'
+    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: '*.csv'
+    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: '*.png'
     cache 'lenient'
 
     input:
@@ -19,9 +19,9 @@ process model_building {
     path model_building_script
 
     output:
-    path "*.rds", emit: models
-    path "*.csv", emit: predictions
-    path "*.png", emit: plots
+    path '*.rds', emit: models
+    path '*.csv', emit: predictions
+    path '*.png', emit: plots
 
     script:
     """
