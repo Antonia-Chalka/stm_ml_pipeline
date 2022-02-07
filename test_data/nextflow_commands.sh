@@ -7,15 +7,5 @@ nextflow run pipeline_dsl2.nf -profile docker -resume
 nextflow run pipeline_dsl2.nf --outdir /home/annita/repos/initial_data_run/out/ --assemblypath /home/annita/repos/initial_data_run/assemblies --hostdata /home/annita/repos/initial_data_run/all_metadata.csv --year_collected="Collection.Year" -profile docker -resume
 
 
-
-sed '/>/ s/_+.*//g' representative_clusters_merged.fasta > cleaned.fasta
-head -n 1 igr_all.tsv | sed 's/\"//g' | tr -s ' \t' '\n' | head -n -1 > igr.list
-seqtk subseq cleaned.fasta igr.list > igr_filter.fasta
-
-
-combine assemblies and give unique headers
-
-makeblastdb -in all_assemblies.fasta (file-name of the contigs or whatever) -dbtype nucl  -out assemblyblastdb
-
-tblastx -query input (with the gene file) -db assemblyblastdb -out outname (file name with the results)
-
+# Run pipeline that tests human seq against old models
+nextflow run pipeline_test.nf --assemblypath /home/annita/repos/initial_data_run/old_model_pred/in/human_assemblies --hostdata /home/annita/repos/initial_data_run/old_model_pred/in/all_metadata.csv --outdir /home/annita/repos/initial_data_run/old_model_pred/out --pv_fasta /home/annita/repos/initial_data_run/old_model_pred/in/pv_filter.fasta --igr_fasta /home/annita/repos/initial_data_run/old_model_pred/in/igr_filter.fasta --models /home/annita/repos/initial_data_run/old_model_pred/in/models/ --year_collected="Collection.Year" -profile docker -resume

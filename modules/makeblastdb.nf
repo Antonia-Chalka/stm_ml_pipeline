@@ -1,0 +1,25 @@
+process makeblastdb {
+    publishDir  "${params.outdir}/models_out/build_ref", mode: 'copy', overwrite: true, pattern : "assemblyblastdb*"
+    cache 'lenient'
+    
+    input:
+    path assemblies
+
+    output:
+    path "blastdb/", emit: blastdb_dir
+
+    script:
+    """
+    # Append filename at start of fasta headers & concantenate
+    for f in *.${params.fileextension}; 
+    do 
+        sed "s|^>|>\${f}.${params.fileextension} |g" "\${f}"; 
+    done > all_assemblies.fa
+
+    mkdir .blastdb/
+
+    makeblastdb -in all_assemblies.fa -dbtype nucl  -out ./blastdb/assemblyblastdb
+    
+    rm -f all_assemblies.fasta
+    """
+}

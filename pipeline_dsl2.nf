@@ -69,6 +69,8 @@ include { pv_process                  } from "$projectDir/modules/pv_process.nf"
 include { snp_process                 } from "$projectDir/modules/snp_process.nf"
 include { model_building              } from "$projectDir/modules/model_building.nf"
 include { model_building_human        } from "$projectDir/modules/model_building_human.nf"
+include { get_igr_fastas              } from "$projectDir/modules/get_igr_fastas.nf"
+include { get_pv_fastas               } from "$projectDir/modules/get_pv_fastas.nf"
 
 // Reference & R script files
 prokka_ref_file = file(params.prokka_ref)
@@ -82,8 +84,6 @@ snps_process_script=file("$projectDir/data/input_snps.R")
 model_building_script=file("$projectDir/data/model_building.R")
 model_building_human_script=file("$projectDir/data/model_building_human.R")
 
-// TODO Add plylogeny (separate workflow)
-
 ///////////////////////////////     WORKFLOW    ////////////////////////////////////////////////////////////////////////////////////////////
 assemblies = Channel.fromPath("${params.assemblypath}/*.${params.fileextension}")
 metadata_file = file(params.hostdata)
@@ -91,17 +91,18 @@ metadata_file = file(params.hostdata)
 workflow {
     assembly_qc(assemblies)
     printqc(assembly_qc.out.collectFile(keepHeader:true, skip:1, sort:true,storeDir:"${params.outdir}/good_assemblies"), metadata_file)
+    gen_scoary_traitfile(printqc.out.good_metadata, scoary_datagen_file)
 
     prokka_annotation(printqc.out.good_assemblies.flatten(), prokka_ref_file)
     amrfinder(prokka_annotation.out.annotation, prokka_annotation.out.transl_protein, prokka_annotation.out.nucleotide)
-    gen_scoary_traitfile(printqc.out.good_metadata, scoary_datagen_file)
+
     panaroo(prokka_annotation.out.annotation.collect())
     piggy(prokka_annotation.out.annotation.collect(), panaroo.out.roary_dir)
     scoary_pv(gen_scoary_traitfile.out, panaroo.out.pv_csv)
     scoary_igr(gen_scoary_traitfile.out, piggy.out.piggy_csv)
+
     snippy(printqc.out.good_assemblies.flatten(), snp_ref_file)
     snippy_core(snippy.out.collect(), snp_ref_file)
-
     snp_dists(snippy_core.out.aligned_snps)
     clonal_detection(clonal_detection_script, printqc.out.good_metadata, snp_dists.out)
     clonal_filtering(clonal_detection.out.clusters, printqc.out.good_assemblies_list, printqc.out.good_metadata)
@@ -111,6 +112,9 @@ workflow {
     igr_process(igr_process_script, piggy.out.piggy_rtab, scoary_igr.out, clonal_filtering.out)
     pv_process(pv_process_script, panaroo.out.pv_rtab, scoary_pv.out, clonal_filtering.out)
     snp_process(snps_process_script, snippy_core.out.core_snps, clonal_filtering.out)
+
+    get_igr_fastas(igr_process.out.igr_all, piggy.out.piggy_ref)
+    get_pv_fastas(pv_process.out.pv_all, panaroo.out.pv_ref)
 
     model_building( amr_process.out.amr_class_all, amr_process.out.amr_class_bps,
                     amr_process.out.amr_gene_all, amr_process.out.amr_gene_bps,
@@ -129,5 +133,3 @@ workflow {
 
     
 }
-
-// TODO Add workflow for inputting new data
