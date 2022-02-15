@@ -1,5 +1,5 @@
 process blast {
-    publishDir  "${params.outdir}/models_out/build_ref", mode: 'copy', overwrite: true, pattern : "*_results.tsv"
+    publishDir  "${params.outdir}/blast_results", mode: 'copy', overwrite: true, pattern : "*_results.tsv"
     cache 'lenient'
     
     input:

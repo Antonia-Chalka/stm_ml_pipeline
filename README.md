@@ -1,11 +1,14 @@
 # Workflow for Host Attribution Machine Learning Models 
 
-A DSL2 Nextflow & Docker pipeline used to build bacterial source attribution machine learning models from assembled genomes, using SNPs, protein variants (pvs), intergenic regions (igrs) and AMR profiles. Currently, it has only been tested for *Salmonella typhimurium* sequences.
+A DSL2 Nextflow & Docker pipeline used to build bacterial source attribution machine learning models from assembled genomes, using SNPs, protein variants (PVs), intergenic regions (IGRs) and AMR profiles. Currently, it has only been tested for *Salmonella typhimurium* sequences.
 
 As used in:
+
 TODO Add citation
 
-## Installation
+# Installation
+
+* [Install Java](https://java.com/en/download/help/download_options.html)
 
 * [Install Nextflow](https://www.nextflow.io/docs/latest/getstarted.html)
 
@@ -13,46 +16,64 @@ TODO Add citation
 
 * Pull Required Docker/Singularity Images
 
-``` bash
-docker pull staphb/quast:5.0.2 
-docker pull staphb/prokka:1.14.5  
-docker pull staphb/ncbi-amrfinderplus:3.10.5  
-docker pull staphb/piggy:1.5 
-docker pull quay.io/biocontainers/panaroo:1.2.9--pyhdfd78af_0 
-docker pull staphb/snippy:4.6.0 
-docker pull rocker/tidyverse:4.0.5  
-docker pull quay.io/biocontainers/scoary:1.6.16--py_2  
-docker pull staphb/snp-dists:0.8.2 
-docker pull annitachalka/r_model_build:1.01 
-docker pull ncbi/blast:2.12.0
-docker pull staphb/seqtk:1.3
+  * With Docker:
 
+      ``` bash
+      docker pull staphb/quast:5.0.2 ;
+      docker pull staphb/prokka:1.14.5 ;
+      docker pull staphb/ncbi-amrfinderplus:3.10.5 ;
+      docker pull staphb/piggy:1.5 ;
+      docker pull quay.io/biocontainers/panaroo:1.2.9--pyhdfd78af_0 ;
+      docker pull staphb/snippy:4.6.0 ;
+      docker pull rocker/tidyverse:4.0.5 ;
+      docker pull quay.io/biocontainers/scoary:1.6.16--py_2 ;
+      docker pull staphb/snp-dists:0.8.2 ;
+      docker pull annitachalka/r_model_build:1.01 ;
+      docker pull ncbi/blast:2.12.0 ;
+      docker pull staphb/seqtk:1.3 
+      ```
 
+  * With SIngularity:
+  
+    ``` bash
+    singularity pull docker://staphb/quast:5.0.2  ;
+    singularity pull docker://staphb/prokka:1.14.5 ; 
+    singularity pull docker://staphb/ncbi-amrfinderplus:3.10.5 ; 
+    singularity pull docker://staphb/piggy:1.5 ; 
+    singularity pull docker://quay.io/biocontainers/panaroo:1.2.9--pyhdfd78af_0 ; 
+    singularity pull docker://staphb/snippy:4.6.0 ; 
+    singularity pull docker://rocker/tidyverse:4.0.5 ; 
+    singularity pull docker://quay.io/biocontainers/scoary:1.6.16--py_2 ; 
+    singularity pull docker://staphb/snp-dists:0.8.2 ; 
+    singularity pull docker://annitachalka/r_model_build:1.01
+    singularity pull docker://ncbi/blast:2.12.0
+    singularity pull docker://ncbi/staphb/seqtk:1.3
+    ```
 
-singularity pull docker://staphb/quast:5.0.2  ;
-singularity pull docker://staphb/prokka:1.14.5 ; 
-singularity pull docker://staphb/ncbi-amrfinderplus:3.10.5 ; 
-singularity pull docker://staphb/piggy:1.5 ; 
-singularity pull docker://quay.io/biocontainers/panaroo:1.2.9--pyhdfd78af_0 ; 
-singularity pull docker://staphb/snippy:4.6.0 ; 
-singularity pull docker://rocker/tidyverse:4.0.5 ; 
-singularity pull docker://quay.io/biocontainers/scoary:1.6.16--py_2 ; 
-singularity pull docker://staphb/snp-dists:0.8.2 ; 
-singularity pull docker://annitachalka/r_model_build:1.01
-TODO  singularity pull docker://ncbi/blast:2.12.0
-singularity pull docker://ncbi/staphb/seqtk:1.3
-
-```
+# Building Models
 
 ## Usage
 
 Simplest way to run:
 
-`nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" `
+`nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv"`
 
 More advanced run:
 
-`nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --snp_dist_threshold=100 --year_collected="Year.Obtained" --panaroo_mode='strict` -resume
+`nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --snp_dist_threshold=100 --year_collected="Year.Obtained" --panaroo_mode='strict -resume`
+
+TODO Add more advanced runs
+
+* Metadata file
+* Assembly stats
+* Threads
+* Organism
+* resume option
+
+TODO Add testing runs
+
+* From previous run
+* From importing models
 
 ## Required Inputs
 
@@ -74,41 +95,102 @@ More advanced run:
 
 Please refer to the metadata.csv file inside the input test folder for an example.
 
-## Additional Parameters/Inputs
- TODO ADD OPTIONAL PARAMETER GUIDE
-  https://github.com/AdmiralenOla/Scoary/blob/master/README.md
+## Full Parameters/Inputs
 
-`--outdir`
+To get a full list of the available paramteters, run: `nextflow  run pipeline_dsl2.nf --help`
 
-`--assembly_column`
-`--host_column`
-`--region_column`
-`--year_collected`
+``` text
+Usage:
+        The options for running the pipeline to build models are structured as follows:
+        --option                       Description/Notes [default value]
 
-`--as_ln_upr` = 6000000
-`--as_ln_lwr` = 4000000
-`--ctg_count` = 500
-`--largest_ctg` = 100000
-`--n50` = 50000
-`--gc_upr` = 54
-`--gc_lwr` = 50
+    Mandatory Parameters:
+         --assemblypath                Directory of your fasta files (full path required) [./test_data/model_build_inut_test]
+         --hostdata                    CSV file containing assembly filename, host, year and region [./test_data/model_build_in/metadata.csv]
 
-`--snp_dist_threshold`
+    Optional Parameters:
+        --outdir                       Output directory for models & other data [./out]
+    
+    Hostdata File Parameters:
+        --assembly_column              Column name of your assemblies. Must contain extension eg myassembly.fasta ["Filename"]
+        --host_column                  Column name of your hosts ["Source.Host"]
+        --region_column                Column of region of origin. Used to detect clonal clusters. Can be empty, but must exist. ["Region"]
+        --year_collection              Column of year each assembly was collected. Used to detect clonal clusters. Can be empty, but must exist. ["Year"]
 
-`--prokka_ref` = "$projectDir/data/stm_proteinref.fasta" 
-`--snp_ref` = "$projectDir/data/stm_sl1344.fasta"
+    Assembly Quality Parameters:
+        --as_ln_upr                    Maximum accepted assembly length [6000000]
+        --as_ln_lwr                    Minumum accepted assembly length [4000000]
+        --ctg_count                    Minimum accepted number of contigs [500]
+        --largest_ctg                  Minimum accepted length of largest contig [100000] 
+        --n50                          Minimum accepted n50 [50000]
+        --gc_upr                       Minimum accepted GC % [54]
+        --gc_lwr                       Maximum accepted GC % [50]
 
-`--amr_species`='Salmonella'
-`--panaroo_mode` = 'moderate'
+    Clonal Detection Parameters:
+        --snp_dist_threshold           SNP difference used to detect clonal clusters. Used in conjuction with region & collection year metadata. [10]
+        
+    Tool-specific Parameters:
+        --prokka_ref                   'Trusted' protein file for prokka (prokka --proteins) [./data/stm_proteinref.fasta]
+        --amr_species                  Assembly species for amrfinder (amrfinder -O) ["Salmonella"]
+        --panaroo_mode                 Panaroo assembly filtering mode (panaroo --clean-mode) ["moderate"]
+        --snp_ref                      Reference file for snippy (snippy --ref) [./data/stm_sl1344.fasta]
+        --threads                      Num of threads to use for panaroo & piggy (panaroo -t & piggy -t) [10]
+    
+    If you wish to alter the scripts used to generate the models, simply edit the appropriate 'model_building' R scripts in ./data/ - ONLY DO SO IF YOU KNOW WHAT YOU ARE DOING
+```
+
+## Assembly QC
+
+TODO WRITEUP
+
+## Clonal Filtering
+
+TODO WRITEUP
 
 ## Outputs
+The output folder should contain the following folders: 
 
+0.Reports: Contains housekeeping  files about the pipeline execution, which include:
 
-## Workflow Outline
+* [Execution report](https://www.nextflow.io/docs/latest/tracing.html#execution-report) as report.html
+* [Trace Report](https://www.nextflow.io/docs/latest/tracing.html#trace-report) as trace.txt
+* [DAG Visualisation](https://www.nextflow.io/docs/latest/tracing.html#dag-visualisation) as DAG.svg
+* [Timeline Report](https://www.nextflow.io/docs/latest/tracing.html#timeline-report) as timeline.html
+
 
 TODO ADD DIAGRAM
 
-## Benchmarks
+TODO WRITEUP
+
+# Testing Models
+
+TODO WRITEUP
+
+## Usage
+
+TODO WRITEUP
+
+## Required Input
+
+## Full Parameters
+
+TODO WRITEUP
+
+## Output
+
+TODO WRITEUP
+
+# Workflow
+
+## Building Models Pipeline
+
+TODO ADD DAG FILE
+
+## Testing Models Pipeline
+
+TODO ADD FILE
+
+# Benchmarks
 
 **Specs**:
 

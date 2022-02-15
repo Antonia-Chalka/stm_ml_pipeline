@@ -1,6 +1,6 @@
 // Filter panaroo output (pvs) with scoary
 process scoary_pv {
-    publishDir  "${params.outdir}/scoary_pv", mode: 'copy', overwrite: true
+    publishDir  "${params.outdir}/2.genomic_features/pv_out/scoary_pv", mode: 'copy', overwrite: true
     cache 'lenient'
 
     input:

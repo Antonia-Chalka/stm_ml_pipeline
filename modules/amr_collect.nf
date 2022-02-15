@@ -1,6 +1,6 @@
 //Concantenate all amr files
 process amr_collect {
-    publishDir  "${params.outdir}/amr_out", mode: 'copy', overwrite: true, pattern : "amr_all.tsv"
+    publishDir  "${params.outdir}/2.genomic_features/", mode: 'copy', overwrite: true, pattern : "amr_all.tsv"
     cache 'lenient'
 
     input:

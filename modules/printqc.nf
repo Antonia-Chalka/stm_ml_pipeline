@@ -1,6 +1,8 @@
 // Filter assemblies based on quast-derived metrics
 process printqc {
-    publishDir  "${params.outdir}/good_assemblies", mode: 'copy', overwrite: true, pattern : "*.${fileextension}"
+    publishDir  "${params.outdir}/1.assembly_quality/good_assemblies/", mode: 'copy', overwrite: true, pattern : "*.${fileextension}"
+    publishDir  "${params.outdir}/1.assembly_quality/", mode: 'copy', overwrite: true, pattern : 'good_noext_metadata.csv'
+
     cache 'lenient'
 
     input:

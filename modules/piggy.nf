@@ -1,6 +1,6 @@
 // Run piggy (extracts intergenic regions)
 process piggy {
-    publishDir  "${params.outdir}", mode: 'copy', overwrite: true
+    publishDir  "${params.outdir}2.genomic_features/igr_out", mode: 'copy', overwrite: true
     cache 'lenient'
 
     input:

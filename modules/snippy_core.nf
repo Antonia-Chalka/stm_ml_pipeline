@@ -1,5 +1,5 @@
 process snippy_core {
-    publishDir  "${params.outdir}/snippy_core_out", mode: 'copy', overwrite: true
+    publishDir  "${params.outdir}/2.genomic_features/snp_core_out", mode: 'copy', overwrite: true
     cache 'lenient'
 
     input:

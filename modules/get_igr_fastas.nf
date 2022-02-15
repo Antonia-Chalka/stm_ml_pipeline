@@ -1,5 +1,5 @@
 process get_igr_fastas {
-    publishDir  "${params.outdir}/models_out/build_ref", mode: 'copy', overwrite: true, pattern : "igr_filter.fasta"
+    publishDir  "${params.outdir}/4.models/model_ref", mode: 'copy', overwrite: true, pattern : "igr_filter.fasta"
     cache 'lenient'
     
     input:

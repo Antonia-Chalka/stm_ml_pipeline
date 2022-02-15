@@ -1,5 +1,5 @@
 process igr_process {
-    publishDir  "${params.outdir}/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+    publishDir  "${params.outdir}/4.model/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
     cache 'lenient'
 
     input:

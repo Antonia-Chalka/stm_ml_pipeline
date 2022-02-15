@@ -1,8 +1,8 @@
 // Model generation - Host/Source Attribution
 process model_building {
-    publishDir "${params.outdir}/models_out/models", mode: 'copy', overwrite: true, pattern: '*.rds'
-    publishDir "${params.outdir}/models_out/predictions", mode: 'copy', overwrite: true, pattern: '*.csv'
-    publishDir "${params.outdir}/models_out/plots", mode: 'copy', overwrite: true, pattern: '*.png'
+    publishDir "${params.outdir}/4.models/models", mode: 'copy', overwrite: true, pattern: '*.rds'
+    publishDir "${params.outdir}/4.models/predictions", mode: 'copy', overwrite: true, pattern: '*.csv'
+    publishDir "${params.outdir}/4.models/plots", mode: 'copy', overwrite: true, pattern: '*.png'
     cache 'lenient'
 
     input:
@@ -25,6 +25,6 @@ process model_building {
 
     script:
     """
-    Rscript --vanilla $model_building_script $amr_class_all $amr_class_bps $amr_gene_all $amr_gene_bps $pv_all $pv_bps $igr_all $igr_bps $snp_abudance_all $snp_abudance_bps $params.model_threads
+    Rscript --vanilla $model_building_script $amr_class_all $amr_class_bps $amr_gene_all $amr_gene_bps $pv_all $pv_bps $igr_all $igr_bps $snp_abudance_all $snp_abudance_bps
     """
 }

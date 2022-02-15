@@ -1,6 +1,6 @@
 // Annotate via prokka. Reference protein file required
 process prokka_annotation {
-    publishDir  "${params.outdir}/annotation", mode: 'copy', overwrite: true
+    publishDir  "${params.outdir}/2.genomic_features/annotations", mode: 'copy', overwrite: true
     cache 'lenient'
 
     input:
