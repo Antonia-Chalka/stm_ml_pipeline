@@ -138,15 +138,6 @@ Usage:
     
     If you wish to alter the scripts used to generate the models, simply edit the appropriate 'model_building' R scripts in ./data/ - ONLY DO SO IF YOU KNOW WHAT YOU ARE DOING
 ```
-
-## Assembly QC
-
-TODO WRITEUP
-
-## Clonal Filtering
-
-TODO WRITEUP
-
 ## Outputs
 The output folder should contain the following folders: 
 
@@ -156,6 +147,18 @@ The output folder should contain the following folders:
 * [Trace Report](https://www.nextflow.io/docs/latest/tracing.html#trace-report) as trace.txt
 * [DAG Visualisation](https://www.nextflow.io/docs/latest/tracing.html#dag-visualisation) as DAG.svg
 * [Timeline Report](https://www.nextflow.io/docs/latest/tracing.html#timeline-report) as timeline.html
+
+## Workflow
+
+![Simplified Diagram of Model Building Pipeline](https://github.com/Antonia-Chalka/stm_ml_pipeline/blob/main/data/STm_plan.png?raw=true)
+
+## Assembly QC
+
+TODO WRITEUP
+
+## Clonal Filtering
+
+TODO WRITEUP
 
 
 TODO ADD DIAGRAM
