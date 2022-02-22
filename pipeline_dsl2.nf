@@ -23,15 +23,15 @@ def helpMessage() {
 
     Assembly Quality Parameters:
         --as_ln_upr                    Maximum accepted assembly length [6000000]
-        --as_ln_lwr                    Minumum accepted assembly length [4000000]
+        --as_ln_lwr                    Minimum accepted assembly length [4000000]
         --ctg_count                    Minimum accepted number of contigs [500]
         --largest_ctg                  Minimum accepted length of largest contig [100000] 
         --n50                          Minimum accepted n50 [50000]
-        --gc_upr                       Minimum accepted GC % [54]
-        --gc_lwr                       Maximum accepted GC % [50]
+        --gc_upr                       Maximum accepted GC % [54]
+        --gc_lwr                       Minimum accepted GC % [50]
 
     Clonal Detection Parameters:
-        --snp_dist_threshold           SNP difference used to detect clonal clusters. Used in conjuction with region & collection year metadata. [10]
+        --snp_dist_threshold           SNP difference used to detect clonal clusters. Used in conjunction with region & collection year metadata. [10]
         
     Tool-specific Parameters:
         --prokka_ref                   'Trusted' protein file for prokka (prokka --proteins) [./data/stm_proteinref.fasta]
@@ -186,6 +186,4 @@ workflow {
         snp_process.out.snp_abudance_human, 
         model_building_human_script
         )
-
-    
 }
