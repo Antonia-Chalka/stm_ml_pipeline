@@ -6,9 +6,9 @@ set.seed(100)
 
 args = commandArgs(trailingOnly=TRUE)
 # test if there is at least x argumentS: if not, return an error
-if (length(args)!=11) {
+if (length(args)!=10) {
   length(args)
-  stop("Exactly 11 arguments must be supplied (input file).n", call.=FALSE)
+  stop("Exactly 10 arguments must be supplied (input file).n", call.=FALSE)
 } 
 ##################################################### Load Input Data #####################################################
 ### AMR ###

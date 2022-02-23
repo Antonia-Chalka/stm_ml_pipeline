@@ -1,8 +1,8 @@
 // Filter for snps
 // HACK If no clusters are detected, no list file is produced. so a blank one has been used for now
 process clonal_detection {
-    publishDir  "${params.outdir}/clonal_detection", mode: 'copy', overwrite: true, pattern : '*.png'
-    publishDir  "${params.outdir}/clonal_detection/clusters", mode: 'copy', overwrite: true, pattern : '*.list'
+    publishDir  "${params.outdir}/3.clonal_detection", mode: 'copy', overwrite: true, pattern : '*.png'
+    publishDir  "${params.outdir}/3.clonal_detection/clusters", mode: 'copy', overwrite: true, pattern : '*.list'
 
     cache 'lenient'
 

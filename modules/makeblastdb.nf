@@ -1,5 +1,5 @@
 process makeblastdb {
-    publishDir  "${params.outdir}/models_out/build_ref", mode: 'copy', overwrite: true, pattern : "assemblyblastdb*"
+    publishDir  "${params.outdir}/4.model/model_ref", mode: 'copy', overwrite: true, pattern : "assemblyblastdb*"
     cache 'lenient'
     
     input:

@@ -4,3 +4,4 @@ work/*
 .vscode/settings.json
 test_data/model_build_out/*
 test_data/model_input_out/*
+out/*

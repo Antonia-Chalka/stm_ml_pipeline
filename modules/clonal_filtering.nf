@@ -1,5 +1,5 @@
 process clonal_filtering {
-    publishDir  "${params.outdir}/clonal_detection", mode: 'copy', overwrite: true, pattern : "*.csv"
+    publishDir  "${params.outdir}/3.clonal_detection", mode: 'copy', overwrite: true, pattern : "*.csv"
     cache 'lenient'
     
     input:

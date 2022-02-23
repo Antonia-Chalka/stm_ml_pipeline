@@ -1,6 +1,6 @@
 // Run panaroo 
 process panaroo {
-    publishDir  "${params.outdir}/panaroo_out", mode: 'copy', overwrite: true
+    publishDir  "${params.outdir}/2.genomic_features/pv_out", mode: 'copy', overwrite: true
     cache 'lenient'
 
     input:

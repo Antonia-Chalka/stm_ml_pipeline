@@ -1,6 +1,6 @@
 // scoary filtering - make traitfile(Assembly,[Hosts]]) via r script
 process gen_scoary_traitfile {
-    publishDir  "${params.outdir}/", mode: 'copy', overwrite: true
+    publishDir  "${params.outdir}/2.genomic_features/", mode: 'copy', overwrite: true
     cache 'lenient'
 
     input:
