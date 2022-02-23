@@ -11,4 +11,5 @@ COPY renv.lock renv.lock
 RUN R -e 'renv::restore()'
 
 RUN R -e "install.packages('e1071', dependencies=TRUE)"
+RUN R -e "install.packages('missForest', dependencies=TRUE)"
 

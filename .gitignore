@@ -1,7 +1,6 @@
 work/*
 .nextflow.log*
 .nextflow/*
-data/docker_images/*
 .vscode/settings.json
 test_data/model_build_out/*
 test_data/model_input_out/*
