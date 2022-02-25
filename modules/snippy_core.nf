@@ -9,9 +9,13 @@ process snippy_core {
     output:
     path 'core.tab', emit: core_snps
     path 'core.aln', emit: aligned_snps
+    path 'core.full.aln', emit: core_full_snps
+    path 'clean.full.aln', emit: core_full_clean_snps
 
     script:
     """
     snippy-core --prefix core --ref "${snp_ref_file}" ${snippy_folders}
+    snippy-clean_full_aln core.full.aln > clean.full.aln
+    
     """
 }

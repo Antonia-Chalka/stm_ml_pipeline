@@ -117,7 +117,7 @@ workflow {
         panaroo.out.roary_dir)
     scoary_pv(
         gen_scoary_traitfile.out, 
-        anaroo.out.pv_csv)
+        panaroo.out.pv_csv)
     scoary_igr(
         gen_scoary_traitfile.out, 
         piggy.out.piggy_csv)
