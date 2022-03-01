@@ -1,8 +1,8 @@
 // Model generation - Human scoring models
 process model_building_human {
-    publishDir "${params.outdir}/4.models/models", mode: 'copy', overwrite: true, pattern: '*.rds'
-    publishDir "${params.outdir}/4.models/predictions", mode: 'copy', overwrite: true, pattern: '*.csv'
-    publishDir "${params.outdir}/4.models/plots", mode: 'copy', overwrite: true, pattern: '*.png'
+    publishDir "${params.outdir}/4.model/models", mode: 'copy', overwrite: true, pattern: '*.rds'
+    publishDir "${params.outdir}/4.model/predictions", mode: 'copy', overwrite: true, pattern: '*.csv'
+    publishDir "${params.outdir}/4.model/plots", mode: 'copy', overwrite: true, pattern: '*.png'
 
     input:
     path amr_class_human

@@ -1,5 +1,5 @@
 process get_pv_fastas {
-    publishDir  "${params.outdir}/4.models/model_ref", mode: 'copy', overwrite: true, pattern : "pv_filter.fasta"
+    publishDir  "${params.outdir}/4.model/model_ref", mode: 'copy', overwrite: true, pattern : "pv_filter.fasta"
     cache 'lenient'
     
     input:

@@ -166,6 +166,12 @@ nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_dat
 nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv"  --threads=5
 ```
 
+TODO Run with docker
+
+TODO Run with singularity
+
+TODO add -resume and profile in paarmeters?
+
 ### Full Parameters (Model Building)
 
 To get a full list of the available parameters, run: `nextflow  run pipeline_dsl2.nf --help`
