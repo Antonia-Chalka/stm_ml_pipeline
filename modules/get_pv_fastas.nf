@@ -16,5 +16,9 @@ process get_pv_fastas {
 
     # Filter list of pvs
     seqtk subseq $pv_clusters pv.list > pv_filter.fasta
+
+    # Check if the filtered list contains any missing headers
+    grep ">" pv_filter.fasta | cut -c 2- > filtered_headers.fasta
+    comm -13 <(sort filtered_headers.fasta) <(sort pv.list) > missing_headers.txt
     """
 }

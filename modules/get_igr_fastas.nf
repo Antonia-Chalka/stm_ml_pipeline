@@ -8,6 +8,7 @@ process get_igr_fastas {
 
     output:
     path "igr_filter.fasta"
+    path "igr_missing_headers.txt"
 
     script:
     """
@@ -20,5 +21,8 @@ process get_igr_fastas {
     # Filter list of igrs
     seqtk subseq cleaned.fasta igr.list > igr_filter.fasta
 
+    # Check if the filtered list contains any missing headers
+    grep ">" igr_filter.fasta | cut -c 2- > filtered_headers.fasta
+    comm -13 <(sort filtered_headers.fasta) <(sort igr.list) > igr_missing_headers.txt
     """
 }
