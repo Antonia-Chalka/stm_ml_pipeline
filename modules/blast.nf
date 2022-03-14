@@ -1,5 +1,5 @@
 process blast {
-    publishDir  "${params.outdir}/blast_results", mode: 'copy', overwrite: true, pattern : "*_results.tsv"
+    publishDir  "${params.outdir}/2.genomic_features/blast_results", mode: 'copy', overwrite: true, pattern : "${query_seq}_results.tsv"
     cache 'lenient'
     
     input:

@@ -32,8 +32,8 @@ pv_coll_nonclonal_bps$Source.Host <- as.factor(pv_coll_nonclonal_bps$Source.Host
 ### IGR ###
 igr_coll_nonclonal <- read.table(args[7], header = TRUE, sep="\t", row.names = 1)
 igr_coll_nonclonal$Source.Host <- as.factor(igr_coll_nonclonal$Source.Host)
-igr_coll_nonclonan_bps <- read.table(args[8], header = TRUE, sep="\t", row.names = 1)
-igr_coll_nonclonan_bps$Source.Host <- as.factor(igr_coll_nonclonan_bps$Source.Host)
+igr_coll_monoclonal_bps <- read.table(args[8], header = TRUE, sep="\t", row.names = 1)
+igr_coll_monoclonal_bps$Source.Host <- as.factor(igr_coll_monoclonal_bps$Source.Host)
 
 ### SNP ###
 snp_abudance_nonclonal <- read.table(args[9], header = TRUE, sep="\t", row.names = 1)
@@ -55,7 +55,7 @@ input_all <- list(amr_class_nonclonal= amr_class_nonclonal,
 input_bps <- list(amr_class_nonclonal_bps = amr_class_nonclonal_bps,
                   amr_gene_nonclonal_bps = amr_gene_nonclonal_bps,
                   pv_coll_nonclonal_bps = pv_coll_nonclonal_bps,
-                  igr_coll_nonclonan_bps = igr_coll_nonclonan_bps,
+                  igr_coll_nonclonal_bps = igr_coll_monoclonal_bps,
                   snp_abudance_nonclonal_bps = snp_abudance_nonclonal_bps
 )
 
@@ -128,7 +128,7 @@ accuracy_overall <- prediction_overall_all %>% filter(rowname %in% c("Accuracy",
   theme_bw() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Accuracy of model", subtitle = "Calculated based on training data (25%, 10-fold validation)", y="%", x="Model Name")
-ggsave(accuracy_overall, file ="accuracy_overal.png", device=png())
+ggsave(accuracy_overall, file ="accuracy_overall.png", device=png())
 
 accuracy_class <- prediction_class_all %>% filter(rowname=="F1") %>% ggplot() +
   geom_bar(aes(x=model, y=score), stat="identity") + 

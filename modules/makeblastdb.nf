@@ -13,7 +13,7 @@ process makeblastdb {
     # Append filename at start of fasta headers & concantenate
     for f in *.${params.fileextension}; 
     do 
-        sed "s|^>|>\${f}.${params.fileextension} |g" "\${f}"; 
+        sed "s|^>|>\${f} |g" "\${f}"; 
     done > all_assemblies.fa
 
     mkdir .blastdb/
