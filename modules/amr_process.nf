@@ -1,7 +1,6 @@
 // Process AMR Data for model generation
 process amr_process {
     publishDir  "${params.outdir}/4.model/model_input", mode: 'copy', overwrite: true, pattern: '*.tsv'
-    cache 'lenient'
 
     input:
     path amr_process_script
