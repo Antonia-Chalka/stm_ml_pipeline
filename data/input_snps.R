@@ -29,7 +29,7 @@ snp_all_counts<- snp_all_counts[, .N, by=list(CHR, POS, value)] %>%
   rename(n=N)
 
 # calculate thresholsd (num of assemblies)
-abudance_lower <- round(nrow(metadata_nonclonal)/100 *1)
+abudance_lower <- round(nrow(metadata_nonclonal)/100 *0.1) # TODO make those values as part of inputs
 abudance_upper <- round(nrow(metadata_nonclonal)/100 *99)
 # filter for >1 & <99
 snp_all_include <- snp_all_counts %>%
