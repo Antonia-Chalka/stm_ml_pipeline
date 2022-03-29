@@ -121,19 +121,3 @@ for (x in input_bps) {
 # save prediction scores here ####
 write.table(prediction_overall_all, file="prediction_overall_all.csv", quote=FALSE, sep=",")
 write.table(prediction_class_all, file="prediction_class_all.csv", quote=FALSE, sep=",")
-
-### Model scores plotting ####
-accuracy_overall <- prediction_overall_all %>% filter(rowname %in% c("Accuracy","Kappa")) %>% ggplot() +
-  geom_bar(aes(x=model, y=V1, fill=rowname), stat="identity", position=position_dodge()) + 
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Accuracy of model", subtitle = "Calculated based on training data (25%, 10-fold validation)", y="%", x="Model Name")
-ggsave(accuracy_overall, file ="accuracy_overall.png", device=png())
-
-accuracy_class <- prediction_class_all %>% filter(rowname=="F1") %>% ggplot() +
-  geom_bar(aes(x=model, y=score), stat="identity") + 
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Accuracy of model within hosts", subtitle = "Calculated based on training data (25%, 10-fold validation)", y="F1 %", x="Model Name") +
-  facet_wrap(. ~ host)
-ggsave(accuracy_class, file ="accuracy_hosts.png", device=png())

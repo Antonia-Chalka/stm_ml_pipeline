@@ -2,7 +2,6 @@
 process model_building {
     publishDir "${params.outdir}/4.model/models", mode: 'copy', overwrite: true, pattern: '*.rds'
     publishDir "${params.outdir}/4.model/predictions", mode: 'copy', overwrite: true, pattern: '*.csv'
-    publishDir "${params.outdir}/4.model/plots", mode: 'copy', overwrite: true, pattern: '*.png'
     cache 'lenient'
 
     input:
@@ -21,7 +20,6 @@ process model_building {
     output:
     path '*.rds', emit: models
     path '*.csv', emit: predictions
-    path '*.png', emit: plots
 
     script:
     """
