@@ -8,9 +8,7 @@ process snp_process {
     path good_nonclonal_metadata
     
     output:
-    path "snp_abudance_all.tsv", emit: snp_abudance_all
-    path "snp_abudance_bps.tsv", emit: snp_abudance_bps
-    path "snp_abudance_human.tsv", emit: snp_abudance_human
+    path "*.tsv", emit: snp_inputs
 
     script:
     """

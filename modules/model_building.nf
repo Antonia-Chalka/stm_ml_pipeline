@@ -5,24 +5,15 @@ process model_building {
     cache 'lenient'
 
     input:
-    path amr_class_all
-    path amr_class_bps
-    path amr_gene_all
-    path amr_gene_bps
-    path pv_all
-    path pv_bps
-    path igr_all
-    path igr_bps
-    path snp_abudance_all
-    path snp_abudance_bps
     path model_building_script
+    path input
 
     output:
-    path '*.rds', emit: models
+    path '*.rds', emit: model
     path '*.csv', emit: predictions
 
     script:
     """
-    Rscript --vanilla $model_building_script $amr_class_all $amr_class_bps $amr_gene_all $amr_gene_bps $pv_all $pv_bps $igr_all $igr_bps $snp_abudance_all $snp_abudance_bps
+    Rscript --vanilla $model_building_script $input
     """
 }

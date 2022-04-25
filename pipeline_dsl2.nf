@@ -52,29 +52,31 @@ if (params.help) {
 
 ////////////////////////////////////////////// MODULES, REFERENCES & SCRIPT FILES //////////////////////////////////////////////
 // Modules 
-include { assembly_qc                 } from "$projectDir/modules/assembly_qc.nf"
-include { printqc                     } from "$projectDir/modules/printqc.nf"
-include { prokka_annotation           } from "$projectDir/modules/prokka_annotation.nf"
-include { amrfinder                   } from "$projectDir/modules/amrfinder.nf"
-include { gen_scoary_traitfile        } from "$projectDir/modules/gen_scoary_traitfile.nf"
-include { panaroo                     } from "$projectDir/modules/panaroo.nf"
-include { piggy                       } from "$projectDir/modules/piggy.nf"
-include { scoary_pv                   } from "$projectDir/modules/scoary_pv.nf"
-include { scoary_igr                  } from "$projectDir/modules/scoary_igr.nf"
-include { snippy                      } from "$projectDir/modules/snippy.nf"
-include { snippy_core                 } from "$projectDir/modules/snippy_core.nf"
-include { snp_dists                   } from "$projectDir/modules/snp_dists.nf"
-include { clonal_detection            } from "$projectDir/modules/clonal_detection.nf"
-include { clonal_filtering            } from "$projectDir/modules/clonal_filtering.nf"
-include { amr_collect                 } from "$projectDir/modules/amr_collect.nf"
-include { amr_process                 } from "$projectDir/modules/amr_process.nf"
-include { igr_process                 } from "$projectDir/modules/igr_process.nf"
-include { pv_process                  } from "$projectDir/modules/pv_process.nf"
-include { snp_process                 } from "$projectDir/modules/snp_process.nf"
-include { model_building              } from "$projectDir/modules/model_building.nf"
-include { model_building_human        } from "$projectDir/modules/model_building_human.nf"
-include { get_igr_fastas              } from "$projectDir/modules/get_igr_fastas.nf"
-include { get_pv_fastas               } from "$projectDir/modules/get_pv_fastas.nf"
+include { assembly_qc                                   } from "$projectDir/modules/assembly_qc.nf"
+include { printqc                                       } from "$projectDir/modules/printqc.nf"
+include { prokka_annotation                             } from "$projectDir/modules/prokka_annotation.nf"
+include { amrfinder                                     } from "$projectDir/modules/amrfinder.nf"
+include { gen_scoary_traitfile                          } from "$projectDir/modules/gen_scoary_traitfile.nf"
+include { panaroo                                       } from "$projectDir/modules/panaroo.nf"
+include { piggy                                         } from "$projectDir/modules/piggy.nf"
+include { scoary_pv                                     } from "$projectDir/modules/scoary_pv.nf"
+include { scoary_igr                                    } from "$projectDir/modules/scoary_igr.nf"
+include { snippy                                        } from "$projectDir/modules/snippy.nf"
+include { snippy_core                                   } from "$projectDir/modules/snippy_core.nf"
+include { snp_dists                                     } from "$projectDir/modules/snp_dists.nf"
+include { clonal_detection                              } from "$projectDir/modules/clonal_detection.nf"
+include { clonal_filtering                              } from "$projectDir/modules/clonal_filtering.nf"
+include { amr_collect                                   } from "$projectDir/modules/amr_collect.nf"
+include { amr_process                                   } from "$projectDir/modules/amr_process.nf"
+include { igr_process                                   } from "$projectDir/modules/igr_process.nf"
+include { pv_process                                    } from "$projectDir/modules/pv_process.nf"
+include { snp_process                                   } from "$projectDir/modules/snp_process.nf"
+include { model_building as model_building_amr          } from "$projectDir/modules/model_building.nf"
+include { model_building as model_building_pv           } from "$projectDir/modules/model_building.nf"
+include { model_building as model_building_igr          } from "$projectDir/modules/model_building.nf"
+include { model_building as model_building_snp          } from "$projectDir/modules/model_building.nf"
+include { get_igr_fastas                                } from "$projectDir/modules/get_igr_fastas.nf"
+include { get_pv_fastas                                 } from "$projectDir/modules/get_pv_fastas.nf"
 
 // Reference files
 prokka_ref_file = file(params.prokka_ref)
@@ -87,8 +89,7 @@ amr_process_script=file("$projectDir/data/input_amr.R")
 pv_process_script=file("$projectDir/data/input_pv.R")
 igr_process_script=file("$projectDir/data/input_igr.R")
 snps_process_script=file("$projectDir/data/input_snps.R")
-model_building_script=file("$projectDir/data/model_building.R")
-model_building_human_script=file("$projectDir/data/model_building_human.R")
+model_building_script=file("$projectDir/data/single_model_build.R")
 
 //////////////////////////////////////////////     WORKFLOW    //////////////////////////////////////////////
 assemblies = Channel.fromPath("${params.assemblypath}/*.${params.fileextension}")
@@ -165,25 +166,16 @@ workflow {
         pv_process.out.pv_all,
         panaroo.out.pv_ref)
 
-    model_building( 
-        amr_process.out.amr_class_all, 
-        amr_process.out.amr_class_bps,
-        amr_process.out.amr_gene_all, 
-        amr_process.out.amr_gene_bps,
-        pv_process.out.pv_all, 
-        pv_process.out.pv_bps,
-        igr_process.out.igr_all, 
-        igr_process.out.igr_bps,
-        snp_process.out.snp_abudance_all, 
-        snp_process.out.snp_abudance_bps,
-        model_building_script
-                    )
-    model_building_human( 
-        amr_process.out.amr_class_human,
-        amr_process.out.amr_gene_human, 
-        pv_process.out.pv_human,
-        igr_process.out.igr_human, 
-        snp_process.out.snp_abudance_human, 
-        model_building_human_script
-        )
+    model_building_amr( 
+        model_building_script,
+        amr_process.out.amr_inputs.flatten())
+    model_building_pv( 
+        model_building_script,
+        pv_process.out.pv_inputs.flatten())
+    model_building_igr( 
+        model_building_script,
+        igr_process.out.igr_inputs.flatten())
+    model_building_snp( 
+        model_building_script,
+        snp_process.out.snp_inputs.flatten())
 }

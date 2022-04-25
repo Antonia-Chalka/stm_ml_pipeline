@@ -10,8 +10,7 @@ process pv_process {
     
     output:
     path "pv_all.tsv", emit: pv_all
-    path "pv_bps.tsv", emit: pv_bps
-    path "pv_human.tsv", emit: pv_human
+    path "*.tsv", emit: pv_inputs 
 
     script:
     """

@@ -10,8 +10,7 @@ process igr_process {
     
     output:
     path "igr_all.tsv", emit: igr_all
-    path "igr_bps.tsv", emit: igr_bps
-    path "igr_human.tsv", emit: igr_human
+    path "*.tsv", emit: igr_inputs
 
     script:
     """
