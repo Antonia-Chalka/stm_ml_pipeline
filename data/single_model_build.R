@@ -1,6 +1,6 @@
 library(tidyverse)
-library(randomForest)
 library(caret)
+library(C50)
 set.seed(100)
 
 args = commandArgs(trailingOnly=TRUE)
@@ -17,14 +17,11 @@ if (!is.numeric(input_data[3,3])) {
 }
 data_name <- tools::file_path_sans_ext(basename(args[1]))
 
-write.table(input_data, file="./test.tsv", sep="\t")
-
-
 # Hyperparameter testing
 control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid", p=0.75, savePredictions="final", classProbs = TRUE)
-tunegrid <- expand.grid(.mtry = c(sqrt(ncol(input_data))))
+tunegrid <- expand.grid(.trials=c(1,5,10,15,20,40,60,80), .model=c("tree","rules"), .winnow=c(TRUE,FALSE))
 
-rf_random <- train(Source.Host~., data=input_data, method="rf", metric="Kappa", tuneGrid = tunegrid, trControl=control, importance=TRUE, ntree=500)
+rf_random <- train(Source.Host~., data=input_data, method="C5.0", metric="Kappa", tuneGrid = tunegrid, trControl=control)
 
 # Save model
 model_filename <- paste(data_name, "_model.rds", sep="")
@@ -33,7 +30,7 @@ saveRDS(rf_random,model_filename)
 # Get Prediction scores
 prediction <- predict.train(rf_random, newdata = input_data)
 prediction_overall <- as.data.frame(as.matrix(confusionMatrix(prediction, input_data$Source.Host), what = "overall")) %>%
-    rownames_to_column()
+    rownames_to_column() 
 prediction_overall$model=data_name
 write.table(prediction_overall, file=paste(data_name, "_prediction_overall.csv", sep=""), quote=FALSE, sep=",")
 

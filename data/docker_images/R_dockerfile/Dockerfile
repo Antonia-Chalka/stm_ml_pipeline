@@ -7,9 +7,6 @@ RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 WORKDIR /project
-COPY renv.lock renv.lock
-RUN R -e 'renv::restore()'
 
-RUN R -e "install.packages('e1071', dependencies=TRUE)"
-RUN R -e "install.packages('missForest', dependencies=TRUE)"
-
+RUN R -e "install.packages('C50', dependencies=TRUE)"
+RUN R -e "install.packages('caret', dependencies=TRUE)"
