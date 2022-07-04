@@ -19,9 +19,9 @@ data_name <- tools::file_path_sans_ext(basename(args[1]))
 
 # Hyperparameter testing
 control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid", p=0.75, savePredictions="final", classProbs = TRUE)
-tunegrid <- expand.grid(.trials=c(1,5,10,15,20,40,60,80), .model=c("tree","rules"), .winnow=c(TRUE,FALSE))
+tunegrid <- expand.grid(.trials=c(1,5,10,15,20,40,60,80), .model="rules", .winnow=c(TRUE,FALSE))
 
-rf_random <- train(Source.Host~., data=input_data, method="C5.0", metric="Kappa", tuneGrid = tunegrid, trControl=control)
+rf_random <- train(x=select(input_data,!Source.Host), y= input_data$Source.Host, method="C5.0", metric="Kappa", tuneGrid = tunegrid, trControl=control)
 
 # Save model
 model_filename <- paste(data_name, "_model.rds", sep="")

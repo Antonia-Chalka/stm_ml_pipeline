@@ -11,21 +11,21 @@ if (length(args)!=5) {
 } 
 
 ############################# Loading Data ####
-amr_class_nonclonal <- read.table(args[1], header=TRUE, row.names = 1)
-amr_gene_nonclonal <- read.table(args[2], header=TRUE, row.names = 1)
-pv_coll_nonclonal <- read.table(args[3], header=TRUE, sep="\t", row.names = 1)
-igr_coll_nonclonal <- read.table(args[4], header = TRUE, sep="\t", row.names = 1)
-snp_abudance_nonclonal <- read.table(args[5], header = TRUE, sep="\t", row.names = 1, colClasses = "character")
+amr_class <- read.table(args[1], header=TRUE, row.names = 1)
+amr_gene <- read.table(args[2], header=TRUE, row.names = 1)
+pv <- read.table(args[3], header=TRUE, sep="\t", row.names = 1)
+igr <- read.table(args[4], header = TRUE, sep="\t", row.names = 1)
+snp_abudance <- read.table(args[5], header = TRUE, sep="\t", row.names = 1, colClasses = "character")
 
 # Set SNP factor levels to AGCT for model reliability 
-snp_abudance_nonclonal[,names(snp_abudance_nonclonal) != "Source.Host"] <- lapply(snp_abudance_nonclonal[,names(snp_abudance_nonclonal) != "Source.Host"],factor,levels=c("C","G","T","A"))
+snp_abudance[,names(snp_abudance) != "Source.Host"] <- lapply(snp_abudance[,names(snp_abudance) != "Source.Host"],factor,levels=c("C","G","T","A"))
 
 # Make list of models
-all_models <- list( amr_class_nonclonal= amr_class_nonclonal,
-                    amr_gene_nonclonal = amr_gene_nonclonal,
-                    pv_coll_nonclonal = pv_coll_nonclonal,
-                    igr_coll_nonclonal = igr_coll_nonclonal,
-                    snp_abudance_nonclonal = snp_abudance_nonclonal
+all_models <- list( amr_class= amr_class,
+                    amr_gene = amr_gene,
+                    pv = pv,
+                    igr = igr,
+                    snp_abudance = snp_abudance
 )
 
 ############################# Predict for all-host models ####
@@ -33,7 +33,7 @@ predictions <- list()
 i=1
 for (model_test in all_models) {
   # Load Model
-  model_filename <- paste("./models/", names(all_models)[i], "_model.rds", sep="")
+  model_filename <- paste("./models/", names(all_models)[i], "_all_model.rds", sep="")
   rf_random <- readRDS(model_filename) 
   
   # Impute Missing columns
@@ -91,7 +91,7 @@ predictions <- list()
 i=1
 for (model_test in all_models) {
   # Load Model
-  model_filename <- paste("./models/", names(all_models)[i], "_model_human.rds", sep="")
+  model_filename <- paste("./models/", names(all_models)[i], "_human_model.rds", sep="")
   rf_random <- readRDS(model_filename) 
   
   # Impute Missing columns
