@@ -12,6 +12,6 @@ process snp_process {
 
     script:
     """
-    Rscript --vanilla $snps_process_script $snp_core $good_nonclonal_metadata $params.assembly_column $params.host_column
+    Rscript --vanilla $snps_process_script $snp_core $good_nonclonal_metadata $params.assembly_column $params.host_column $params.snp_lower $params.snp_upper
     """
 }

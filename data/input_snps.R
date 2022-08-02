@@ -3,9 +3,9 @@ library(data.table)
 set.seed(100)
 
 args = commandArgs(trailingOnly=TRUE)
-if (length(args)!=4) {
+if (length(args)!=6) {
   length(args)
-  stop("Exactly 4 arguments must be supplied (input file).n", call.=FALSE)
+  stop("Exactly 6 arguments must be supplied (input file).n", call.=FALSE)
 }
 
 #### Load snippy data ####
@@ -29,8 +29,8 @@ snp_all_counts<- snp_all_counts[, .N, by=list(CHR, POS, value)] %>%
   rename(n=N)
 
 # calculate thresholsd (num of assemblies)
-abudance_lower <- round(ncol(snippy_all)/100 *0.1) # TODO make those values as part of inputs
-abudance_upper <- round(ncol(snippy_all)/100 *99)
+abudance_lower <- round(ncol(snippy_all)/100 * as.double(args[5])) # TODO make those values as part of inputs
+abudance_upper <- round(ncol(snippy_all)/100 * as.double(args[6]))
 # filter for >1 & <99
 snp_all_include <- snp_all_counts %>%
   filter(n > abudance_lower & n < abudance_upper)
