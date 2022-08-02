@@ -35,6 +35,7 @@ def helpMessage() {
         
     Tool-specific Parameters:
         --prokka_ref                   'Trusted' protein file for prokka (prokka --proteins) [./data/stm_proteinref.fasta]
+        --prokka_extra                 Additional options for prokka anootation, eg."--genus Enterococcus" []
         --amr_species                  Assembly species for amrfinder (amrfinder -O) ["Salmonella"]
         --panaroo_mode                 Panaroo assembly filtering mode (panaroo --clean-mode) ["moderate"]
         --snp_ref                      Reference file for snippy (snippy --ref) [./data/stm_sl1344.fasta]

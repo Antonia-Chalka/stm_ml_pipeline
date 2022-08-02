@@ -142,10 +142,10 @@ nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_dat
 nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --prokka_ref "./my_folder/protein_file.fasta"
 ```
 
-- Change amrfinder species:
+- Change amrfinder species & have prokka use the Escherichia genus for annotation:
 
 ``` bash
-nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --amr_species="ecoli"
+nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --amr_species="ecoli" --prokka_extra "--genus Escherichia"
 ```
 
 - Run panaroo on a different filtering setting:
