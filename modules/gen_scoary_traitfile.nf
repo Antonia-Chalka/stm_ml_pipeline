@@ -8,7 +8,7 @@ process gen_scoary_traitfile {
     path scoary_datagen_file
 
     output:
-    path "./scoary_traitfile.csv" 
+    path "scoary_traitfile.csv" 
 
     script:
     """
