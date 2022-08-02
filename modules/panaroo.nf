@@ -16,6 +16,6 @@ process panaroo {
     """
     panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate -t $params.threads --remove-invalid-genes --merge_paralogs
     mkdir ./roary_out
-    cp  ./panaroo_out/gene_presence_absence_roary.csv ./roary_out/gene_presence_absence.csv
+    sed -e 's/^\|$/"/g' -e 's/,/","/g' ./panaroo_out/gene_presence_absence_roary.csv > ./roary_out/gene_presence_absence.csv
     """
 }
