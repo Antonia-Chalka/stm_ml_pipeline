@@ -18,14 +18,16 @@ process panaroo {
     path "panaroo_out/final_graph.gml", emit: final_graph
     path "panaroo_out/gene_data.csv", emit: gene_data
     path "panaroo_out/gene_presence_absence.csv", emit: gene_presence_absence
-    path "panaroo_out/pre_filt_graph.gml", emit: pre_filt_graph.gml
+    path "panaroo_out/pre_filt_graph.gml", emit: pre_filt_graph
     path "panaroo_out/struct_presence_absence.Rtab", emit: struct_presence_absence
     path "panaroo_out/summary_statistics.txt", emit: summary_statistics
 
     script:
     """
-    panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate -t $params.threads --remove-invalid-genes --merge_paralogs
     mkdir ./roary_out
-    sed -e 's/^\|$/"/g' -e 's/,/","/g' ./panaroo_out/gene_presence_absence_roary.csv > ./roary_out/gene_presence_absence.csv
+    
+    panaroo -i ${annotations} -o panaroo_out/ --clean-mode moderate -t $params.threads --remove-invalid-genes --merge_paralogs
+    
+    sed -e 's/,/","/g' ./panaroo_out/gene_presence_absence_roary.csv > ./roary_out/gene_presence_absence.csv
     """
 }
