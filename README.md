@@ -1,4 +1,4 @@
-# Workflow for Host Attribution Machine Learning Models 
+# Workflow for Host Attribution Machine Learning Models
 
 A DSL2 Nextflow & Docker pipeline used to build bacterial source attribution machine learning models from assembled genomes, using SNPs, protein variants (PVs), intergenic regions (IGRs) and AMR profiles. Currently, it has only been tested for *Salmonella typhimurium* sequences.
 
@@ -32,6 +32,7 @@ TODO Add citation
 - [Install Docker](https://docs.docker.com/get-docker/)
 - Pull Required Docker/Singularity Images
   - With Docker:
+
      ``` bash
       docker pull staphb/quast:5.0.2 ;
       docker pull staphb/prokka:1.14.5 ;
@@ -46,7 +47,9 @@ TODO Add citation
       docker pull ncbi/blast:2.12.0 ;
       docker pull staphb/seqtk:1.3 
       ```
+
   - With Singularity:
+
     ``` bash
     singularity pull docker://staphb/quast:5.0.2  ;
     singularity pull docker://staphb/prokka:1.14.5 ; 
@@ -67,15 +70,14 @@ TODO Add citation
 Build models from a set of assemblies:
 
 ``` bash
-nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --resume
+nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --profile singularity
 ```
 
 Get predictions of existing models from a set of assemblies:
 
-TODO CHANGE TO ADD MODEL ARGUMENT
-
 ``` bash
-nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv" --resume
+nextflow run pipeline_test.nf --assemblypath "/home/username/myproject/test_in" --outdir "/home/username/myproject/test_out" --pv_fasta "/home/username/model_building_out/4.model/model_ref/pv_filter.fasta" --igr_fasta "/home/username/model_building_out/4.model/model_ref/igr_filter.fasta" --models "/home/username/model_building_out/4.model/models" --snp_core_ref "/home/username/model_building_out/2.genomic_features/snp_core_out/core.ref.tab" -profile singularity 
+
 ```
 
 ## Building Models
@@ -94,14 +96,17 @@ nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_dat
 - **Region**: Country/Region the assembly was obtained from. It is used for the detection for clonal clusters. Fields can be left blank, but must be present in the metadata file.
 - **Year:** Year the assembly was collected. It is used for the detection for clonal clusters. Fields can be left blank, but must be present.
 - Below is an example of the contents of the metadata file:
-    ```
+
+    ``` txt
     Filename,Source.Host,Year,Region
     SAL_AB4979AA_AS.result.fasta,Bovine,2001,USA
     SAL_AB8755AA_AS.result.fasta,Bovine,2001,USA
     SAL_BA6077AA_AS.scaffold.fasta,Bovine,2001,USA
     ```
+
 - An alternative minimal metadata file with the Year and Region fields blank:
-    ```
+
+    ``` txt
     Filename,Source.Host,Year,Region
     SAL_AB4979AA_AS.result.fasta,Bovine,,
     SAL_AB8755AA_AS.result.fasta,Bovine,,
@@ -166,54 +171,58 @@ nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_dat
 nextflow run pipeline_dsl2.nf --assemblypath "/home/username/myproject/input_data" --hostdata "/home/username/myproject/input_data/metadata.csv"  --threads=5
 ```
 
-TODO Run with docker
-
-TODO Run with singularity
-
-TODO add -resume and profile in paarmeters?
-
 ### Full Parameters (Model Building)
 
 To get a full list of the available parameters, run: `nextflow  run pipeline_dsl2.nf --help`
 
-``` text
-Usage:
+``` txt
+    Usage:
         The options for running the pipeline to build models are structured as follows:
         --option                       Description/Notes [default value]
 
     Mandatory Parameters:
-         --assemblypath                Directory of your fasta files (full path required) [./test_data/model_build_input_test]
-         --hostdata                    CSV file containing assembly filename, host, year and region [./test_data/model_build_in/metadata.csv]
+        --assemblypath                  Directory of your fasta files (full path required) [./test_data/model_build_inut_test]
+        --hostdata                      CSV file containing assembly filename, host, year and region [./test_data/model_build_in/metadata.csv]
 
     Optional Parameters:
-        --outdir                       Output directory for models & other data [./out]
+        --outdir                        Output directory for models & other data [./out]
     
     Hostdata File Parameters:
-        --assembly_column              Column name of your assemblies. Must contain extension eg myassembly.fasta ["Filename"]
-        --host_column                  Column name of your hosts ["Source.Host"]
-        --region_column                Column of region of origin. Used to detect clonal clusters. Can be empty, but must exist. ["Region"]
-        --year_collection              Column of year each assembly was collected. Used to detect clonal clusters. Can be empty, but must exist. ["Year"]
+        --assembly_column               Column name of your assemblies. Must contain extension eg myassembly.fasta ["Filename"]
+        --host_column                   Column name of your hosts ["Source.Host"]
+        --region_column                 Column of region of origin. Used to detect clonal clusters. Can be empty, but must exist. ["Region"]
+        --year_collection               Column of year each assembly was collected. Used to detect clonal clusters. Can be empty, but must exist. ["Year"]
 
     Assembly Quality Parameters:
-        --as_ln_upr                    Maximum accepted assembly length [6000000]
-        --as_ln_lwr                    Minimum accepted assembly length [4000000]
-        --ctg_count                    Minimum accepted number of contigs [500]
-        --largest_ctg                  Minimum accepted length of largest contig [100000] 
-        --n50                          Minimum accepted n50 [50000]
-        --gc_upr                       Minimum accepted GC % [54]
-        --gc_lwr                       Maximum accepted GC % [50]
+        --as_ln_upr                     Maximum accepted assembly length [6000000]
+        --as_ln_lwr                     Minimum accepted assembly length [4000000]
+        --ctg_count                     Minimum accepted number of contigs [500]
+        --largest_ctg                   Minimum accepted length of largest contig [100000] 
+        --n50                           Minimum accepted n50 [50000]
+        --gc_upr                        Maximum accepted GC % [54]
+        --gc_lwr                        Minimum accepted GC % [50]
 
     Clonal Detection Parameters:
-        --snp_dist_threshold           SNP difference used to detect clonal clusters. Used in conjunction with region & collection year metadata. [10]
+        --snp_dist_threshold            SNP difference used to detect clonal clusters. Used in conjunction with region & collection year metadata. [10]
         
     Tool-specific Parameters:
-        --prokka_ref                   'Trusted' protein file for prokka (prokka --proteins) [./data/stm_proteinref.fasta]
-        --amr_species                  Assembly species for amrfinder (amrfinder -O) ["Salmonella"]
-        --panaroo_mode                 Panaroo assembly filtering mode (panaroo --clean-mode) ["moderate"]
-        --snp_ref                      Reference file for snippy (snippy --ref) [./data/stm_sl1344.fasta]
-        --threads                      Num of threads to use for panaroo & piggy (panaroo -t & piggy -t) [10]
+        --prokka_ref                    'Trusted' protein file for prokka (prokka --proteins) [./data/stm_proteinref.fasta]
+        --prokka_extra                  Additional options for prokka anootation, eg."--genus Enterococcus" []
+        --amr_species                   Assembly species for amrfinder (amrfinder -O) ["Salmonella"]
+        --panaroo_mode                  Panaroo assembly filtering mode (panaroo --clean-mode) ["moderate"]
+        --snp_ref                       Reference file for snippy (snippy --ref) [./data/stm_sl1344.fasta]
+        --threads                       Num of threads to use for panaroo & piggy (panaroo -t & piggy -t) [10]
     
+    Feature Filtering Parameters:
+        snp_lower                       Lower threshold abundance of SNPs to be excluded from odel training [0.1]
+        snp_upper                       Lower threshold abundance of SNPs to be excluded from odel training [99]
+        scoarycutoff                    Threshold for filtering PV/IGRs based on scoary's bonferroni corrected p value [1.1]
+
+    Nextflow Options
+        profile                         Run with docker or singularity (options are docker or singularity)
+
     If you wish to alter the scripts used to generate the models, simply edit the appropriate 'model_building' R scripts in ./data/ - ONLY DO SO IF YOU KNOW WHAT YOU ARE DOING
+    
 ```
 
 ### Outputs (Model Building)
@@ -230,41 +239,27 @@ The output folder should contain the following folders:
     - `good_assemblies`
       - `*.fasta`
 - `2.genomic_features/`
-  - `amr_all.tsv`
-  - `scoary_traitfile.csv`
-  - `annotations/`
-    - `*.gff`
-    - `*.faa`
-    - `*.fna`
-  - `pv_out`
+  - `amr_all.tsv`:
+  - `scoary_traitfile.csv`: file used by scoary for trait association
+  - `annotations/`: prokka output
+  - `pv_out`: panaroo & scoary outputs
     - `panaroo_out/`
-      - `gene_presence_absence.Rtab`
-      - `pan_genome_reference.fa`
     - `roary_out/`
-      - `gene_presence_absence_roary.csv`
     - `scoary_pv/`
-      - `*.results.csv`
-  - `igr_out/`
+  - `igr_out/`: piggy & scoary outputs
     - `piggy_out/`
-      - `IGR_presence_absence.csv`
-      - `IGR_presence_absence.Rtab`
-      - `representative_clusters_merged.fasta`
     - `scoary_igr/`
-      - `*.results.csv`
-  - `snp_core_out/`
-    - `core.tab`
-    - `core.aln`
-  - `3.clonal_detection/`
+  - `snp_core_out/`: snippy outputs
+  - `3.clonal_detection/`: information about clonal clusters within inputted assemblies
     - `base_cluster_static.png`
-    - `good_nonclonal_metadata.csv`
-    - `clusters/`
-      - `*.list`
+    - `good_nonclonal_metadata.csv`: metadata file with the clonal assemblies removed, except for 1 representative from each clonal cluster
+    - `clusters/`: folder with each cluster as a separate file
 - `4.model/`
-  - `model_ref/`
+  - `model_ref/`: sequence reference files needed for the prediction of new assemblies
     - `igr_filter.fasta`
     - `pv_filter.fasta`
     - `assemblyblastdb*`
-  - `model_input/`
+  - `model_input/`: files used as model inputs (amr, pv, igr, snp)
     - `amr_gene_all.tsv`
     - `amr_gene_bps.tsv`
     - `amr_gene_human.tsv`
@@ -280,14 +275,9 @@ The output folder should contain the following folders:
     - `snp_abudance_all.tsv`
     - `snp_abudance_bps.tsv`
     - `snp_abudance_human.tsv`
-  - `models/`
-    - `*.rds`
-  - `predictions/`
-    - `*.csv`
+  - `models/`: folder with prediction models
+  - `predictions/`: folder with files on how each inputted assembly was predicted by each model
   - `plots/`
-    - `*.png`
-
-TODO ADD Descriptions of output files
 
 ### Workflow (Model Building)
 
@@ -308,21 +298,76 @@ Assemblies that fullfil all of the above conditions are collected into clonal cl
 
 ### Required Inputs (Testing Models)
 
-TODO WRITEUP
+`--assemblypath` : Path to your assembly directory.
 
-### Advanced Runs (Testing Models)
+- **Must** be a full path, not a relative one.
+- Assemblies **must** have .fasta extension (otherwise the pipeline breaks)
 
-TODO Include in write up that metadata folder can just be filenames
+`--pv_fasta`
 
-TODO WRITEUP
+`--igr_fasta`
+
+`--models`
+
+`--snp_core_ref`
+
+The above parameters are for files generated during a run of the model building pipeline
 
 ### Full Parameters (Testing Models)
 
-TODO WRITEUP
+To get a full list of the available parameters, run: `nextflow  run pipeline_test.nf --help`
+
+``` txt
+    Usage:
+        The options for running the pipeline to build models are structured as follows:
+        --option                        Description/Notes [default value]
+
+    Mandatory inputs:
+        --assemblypath                  Directory of your fasta files (full path required) [input_test]
+        
+        --pv_fasta                      Fasta file of the pv used to train the pv model (generated by previous pipeline) [out/4.model/model_ref/pv_filter.fasta ]
+        --igr_fasta                     Fasta file of the igr sequences used to train the igr model (generated by previous pipeline) [out/4.model/model_ref/igr_filter.fasta ]
+        --models                        Folder of where your models are stored (generated by previous pipeline) [out/4.model/models]
+        --snp_core_ref                  Reference file of your core snps (generated by previous pipeline) [out/2.genomic_features/snp_core_out/core.ref.tab]
+
+    Optional arguments:
+        --outdir                        Output directory for models & other data [./out]
+    
+    Hostdata file options:
+        --assembly_column               Column name of your assemblies. Must contain extension eg myassembly.fasta ["Filename"]
+
+    Tool-specific arguments:
+        --prokka_ref                    'Trusted' protein file for prokka (prokka --proteins) [./data/stm_proteinref.fasta]
+        --prokka_extra                  Additional options for prokka anootation, eg."--genus Enterococcus" []
+        --amr_species                   Assembly species for amrfinder (amrfinder -O) ["Salmonella"]
+        --snp_ref                       Reference file for snippy (snippy --ref) [/data/stm_sl1344.fasta]
+
+    Nextflow Options
+        profile                         Run with docker or singularity (options are docker or singularity)
+```
 
 ### Outputs (Testing Models)
 
-TODO WRITEUP
+The output folder should contain the following items:
+
+- `0.Reports/`: Contains housekeeping  files about the pipeline execution, which include:
+  - [Execution report](https://www.nextflow.io/docs/latest/tracing.html#execution-report) as `report.html`
+  - [Trace Report](https://www.nextflow.io/docs/latest/tracing.html#trace-report) as `trace.txt`
+  - [DAG Visualization](https://www.nextflow.io/docs/latest/tracing.html#dag-visualisation) as `DAG.svg`
+  - [Timeline Report](https://www.nextflow.io/docs/latest/tracing.html#timeline-report) as `timeline.html`
+- `2.genomic_features/`
+  - `amr_all.tsv`:
+  - `annotations/`: prokka output
+  - `blast_results`: blast output of the inputted assemblies against the PVs/IGRs used to train the models
+  - `snp_core_out/`: snippy outputs
+- `4.model/`
+  - `model_input/`: the inputted assembly data used for testing (amr, pv, igr, snp)
+    - `amr_gene_all.tsv`
+    - `amr_class_all.tsv`
+    - `igr_all.tsv`
+    - `pv_all.tsv`
+    - `snp_abudance_all.tsv`
+  - `predictions/`: folder with files on how each inputted assembly was predicted by each model
 
 ### Workflow (Testing Models)
 
@@ -338,7 +383,7 @@ TODO WRITEUP
 
 **Test Dataset:**
 
-``` 
+``` txt
 Completed at: 09-Dec-2021 19:00:52
 Duration    : 17m 6s
 CPU hours   : 3.7
