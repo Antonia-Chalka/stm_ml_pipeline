@@ -29,7 +29,7 @@ snp_all_counts<- snp_all_counts[, .N, by=list(CHR, POS, value)] %>%
   rename(n=N)
 
 # calculate thresholsd (num of assemblies)
-abudance_lower <- round(ncol(snippy_all)/100 * as.double(args[5])) # TODO make those values as part of inputs
+abudance_lower <- round(ncol(snippy_all)/100 * as.double(args[5]))
 abudance_upper <- round(ncol(snippy_all)/100 * as.double(args[6]))
 # filter for >1 & <99
 snp_all_include <- snp_all_counts %>%

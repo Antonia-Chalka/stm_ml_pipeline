@@ -1,5 +1,6 @@
 process igr_process {
     publishDir  "${params.outdir}/4.model/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+    publishDir  "${params.outdir}/2.genomic_features/igr_out/scoary_igr", mode: 'copy', overwrite: true, pattern: "*.csv"
     cache 'lenient'
 
     input:
@@ -11,6 +12,7 @@ process igr_process {
     output:
     path "igr_all.tsv", emit: igr_all
     path "*.tsv", emit: igr_inputs
+    path "scoary_all.csv", emit: scoary_all
 
     script:
     """
