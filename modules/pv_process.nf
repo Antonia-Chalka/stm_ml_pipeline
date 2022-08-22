@@ -1,5 +1,7 @@
 process pv_process {
     publishDir  "${params.outdir}/4.model/model_input", mode: 'copy', overwrite: true, pattern: "*.tsv"
+    publishDir  "${params.outdir}/2.genomic_features/pv_out/scoary_pv", mode: 'copy', overwrite: true, pattern: "*.csv"
+
     cache 'lenient'
 
     input:
