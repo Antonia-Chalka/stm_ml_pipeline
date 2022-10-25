@@ -13,7 +13,6 @@ process clonal_detection {
 
     output:
     path '*.list', emit: clusters
-    path '*.png', emit: cluster_graph
 
     script:
     """
