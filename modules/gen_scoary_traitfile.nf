@@ -11,7 +11,13 @@ process gen_scoary_traitfile {
     path "scoary_traitfile.csv" 
 
     script:
+    if (scoary_datagen_file=="$projectDir/data/scoary_generate_tabfile.R")
     """
     Rscript --vanilla $scoary_datagen_file $metadata $params.assembly_column $params.host_column
     """
+    else
+    """
+    Rscript --vanilla $scoary_datagen_file $metadata $params.assembly_column $params.host_column $params.scoary_threshold
+    """
+
 }

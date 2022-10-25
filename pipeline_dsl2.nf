@@ -92,7 +92,7 @@ prokka_ref_file = file(params.prokka_ref)
 snp_ref_file = file(params.snp_ref)
 
 // R script files
-scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
+scoary_datagen_file=file(params.scoary_gen_file)
 clonal_detection_script=file("$projectDir/data/filter_script.R")
 amr_process_script=file("$projectDir/data/input_amr.R")
 pv_process_script=file("$projectDir/data/input_pv.R")
@@ -116,10 +116,10 @@ workflow {
     prokka_annotation(
         printqc.out.good_assemblies.flatten(), 
         prokka_ref_file)
-    amrfinder(
-        prokka_annotation.out.annotation, 
-        prokka_annotation.out.transl_protein,
-        prokka_annotation.out.nucleotide)
+    //amrfinder(
+    //    prokka_annotation.out.annotation, 
+    //    prokka_annotation.out.transl_protein,
+    //    prokka_annotation.out.nucleotide)
 
     panaroo(prokka_annotation.out.annotation.collect())
     piggy(
@@ -148,43 +148,43 @@ workflow {
         printqc.out.good_assemblies_list, 
         printqc.out.good_metadata)
 
-    amr_collect(amrfinder.out.collect())
-    amr_process(
-        amr_process_script, 
-        amr_collect.out, 
-        clonal_filtering.out)
-    igr_process(
-        igr_process_script, 
-        piggy.out.piggy_rtab, 
-        scoary_igr.out, 
-        clonal_filtering.out)
-    pv_process(
-        pv_process_script, 
-        panaroo.out.pv_rtab, 
-        scoary_pv.out, 
-        clonal_filtering.out)
-    snp_process(
-        snps_process_script, 
-        snippy_core.out.core_snps,
-        clonal_filtering.out)
+    //amr_collect(amrfinder.out.collect())
+    //amr_process(
+    //    amr_process_script, 
+    //    amr_collect.out, 
+    //    clonal_filtering.out)
+    //igr_process(
+    //    igr_process_script, 
+    //    piggy.out.piggy_rtab, 
+    //    scoary_igr.out, 
+    //    clonal_filtering.out)
+    //pv_process(
+    //    pv_process_script, 
+    //    panaroo.out.pv_rtab, 
+    //    scoary_pv.out, 
+    //    clonal_filtering.out)
+    //snp_process(
+    //    snps_process_script, 
+    //    snippy_core.out.core_snps,
+    //    clonal_filtering.out)
 
-    get_igr_fastas(
-        igr_process.out.igr_all, 
-        piggy.out.piggy_ref)
-    get_pv_fastas(
-        pv_process.out.pv_all,
-        panaroo.out.pv_ref)
+    //get_igr_fastas(
+    //    igr_process.out.igr_all, 
+    //    piggy.out.piggy_ref)
+    //get_pv_fastas(
+    //    pv_process.out.pv_all,
+    //    panaroo.out.pv_ref)
 
-    model_building_amr( 
-        model_building_script,
-        amr_process.out.amr_inputs.flatten())
-    model_building_pv( 
-        model_building_script,
-        pv_process.out.pv_inputs.flatten())
-    model_building_igr( 
-        model_building_script,
-        igr_process.out.igr_inputs.flatten())
-    model_building_snp( 
-        model_building_script,
-        snp_process.out.snp_inputs.flatten())
+    //model_building_amr( 
+    //    model_building_script,
+    //    amr_process.out.amr_inputs.flatten())
+    //model_building_pv( 
+    //    model_building_script,
+    //    pv_process.out.pv_inputs.flatten())
+    //model_building_igr( 
+    //    model_building_script,
+    //    igr_process.out.igr_inputs.flatten())
+    //model_building_snp( 
+    //    model_building_script,
+    //    snp_process.out.snp_inputs.flatten())
 }
