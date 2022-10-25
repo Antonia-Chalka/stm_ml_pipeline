@@ -21,11 +21,6 @@ snpdist_base_ident <- snpdist_base %>%
   filter(V1!=V2 & ( V1!="Reference" & V2!="Reference")) %>% 
   filter(V3<=strtoi(args[7])) 
 
-if  (nrow(snpdist_base_ident)==0) {
-  print("No clusters detected")
-  quit(status=0)
-}
-
 snpdist_base_ident_metadata <-snpdist_base_ident %>% 
   left_join(metadata, by=c("V1" ="Filename")) %>%
   rename(V1.Region = Region, V1.Collection.Year = Collection.Year, V1.Source.Host = Source.Host) %>%
@@ -33,6 +28,10 @@ snpdist_base_ident_metadata <-snpdist_base_ident %>%
   rename(V2.Region = Region, V2.Collection.Year = Collection.Year, V2.Source.Host = Source.Host) %>%
   filter(V1.Region == V2.Region & V1.Collection.Year == V2.Collection.Year & V1.Source.Host == V2.Source.Host)
 
+if  (nrow(snpdist_base_ident_metadata)==0) {
+  print("No clusters detected")
+  quit(status=0)
+}
 
 # Get unique clusters
 snpdist_base_clust <- snpdist_base_ident_metadata %>% 
