@@ -64,7 +64,6 @@ if (params.help) {
 include { assembly_qc                                   } from "$projectDir/modules/assembly_qc.nf"
 include { printqc                                       } from "$projectDir/modules/printqc.nf"
 include { prokka_annotation                             } from "$projectDir/modules/prokka_annotation.nf"
-include { amrfinder                                     } from "$projectDir/modules/amrfinder.nf"
 include { gen_scoary_traitfile                          } from "$projectDir/modules/gen_scoary_traitfile.nf"
 include { panaroo                                       } from "$projectDir/modules/panaroo.nf"
 include { piggy                                         } from "$projectDir/modules/piggy.nf"
@@ -75,15 +74,10 @@ include { snippy_core                                   } from "$projectDir/modu
 include { snp_dists                                     } from "$projectDir/modules/snp_dists.nf"
 include { clonal_detection                              } from "$projectDir/modules/clonal_detection.nf"
 include { clonal_filtering                              } from "$projectDir/modules/clonal_filtering.nf"
-include { amr_collect                                   } from "$projectDir/modules/amr_collect.nf"
-include { amr_process                                   } from "$projectDir/modules/amr_process.nf"
 include { igr_process                                   } from "$projectDir/modules/igr_process.nf"
 include { pv_process                                    } from "$projectDir/modules/pv_process.nf"
-include { snp_process                                   } from "$projectDir/modules/snp_process.nf"
-include { model_building as model_building_amr          } from "$projectDir/modules/model_building.nf"
 include { model_building as model_building_pv           } from "$projectDir/modules/model_building.nf"
 include { model_building as model_building_igr          } from "$projectDir/modules/model_building.nf"
-include { model_building as model_building_snp          } from "$projectDir/modules/model_building.nf"
 include { get_igr_fastas                                } from "$projectDir/modules/get_igr_fastas.nf"
 include { get_pv_fastas                                 } from "$projectDir/modules/get_pv_fastas.nf"
 
@@ -94,10 +88,8 @@ snp_ref_file = file(params.snp_ref)
 // R script files
 scoary_datagen_file=file(params.scoary_gen_file)
 clonal_detection_script=file("$projectDir/data/filter_script.R")
-amr_process_script=file("$projectDir/data/input_amr.R")
 pv_process_script=file("$projectDir/data/input_pv.R")
 igr_process_script=file("$projectDir/data/input_igr.R")
-snps_process_script=file("$projectDir/data/input_snps.R")
 model_building_script=file("$projectDir/data/single_model_build.R")
 
 //////////////////////////////////////////////     WORKFLOW    //////////////////////////////////////////////
@@ -116,10 +108,6 @@ workflow {
     prokka_annotation(
         printqc.out.good_assemblies.flatten(), 
         prokka_ref_file)
-    //amrfinder(
-    //    prokka_annotation.out.annotation, 
-    //    prokka_annotation.out.transl_protein,
-    //    prokka_annotation.out.nucleotide)
 
     panaroo(prokka_annotation.out.annotation.collect())
     piggy(
@@ -148,11 +136,6 @@ workflow {
         printqc.out.good_assemblies_list, 
         printqc.out.good_metadata)
 
-    //amr_collect(amrfinder.out.collect())
-    //amr_process(
-    //    amr_process_script, 
-    //    amr_collect.out, 
-    //    clonal_filtering.out)
     //igr_process(
     //    igr_process_script, 
     //    piggy.out.piggy_rtab, 
@@ -163,10 +146,6 @@ workflow {
     //    panaroo.out.pv_rtab, 
     //    scoary_pv.out, 
     //    clonal_filtering.out)
-    //snp_process(
-    //    snps_process_script, 
-    //    snippy_core.out.core_snps,
-    //    clonal_filtering.out)
 
     //get_igr_fastas(
     //    igr_process.out.igr_all, 
@@ -175,16 +154,10 @@ workflow {
     //    pv_process.out.pv_all,
     //    panaroo.out.pv_ref)
 
-    //model_building_amr( 
-    //    model_building_script,
-    //    amr_process.out.amr_inputs.flatten())
     //model_building_pv( 
     //    model_building_script,
     //    pv_process.out.pv_inputs.flatten())
     //model_building_igr( 
     //    model_building_script,
     //    igr_process.out.igr_inputs.flatten())
-    //model_building_snp( 
-    //    model_building_script,
-    //    snp_process.out.snp_inputs.flatten())
 }
