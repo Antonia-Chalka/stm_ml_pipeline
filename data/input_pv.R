@@ -45,10 +45,10 @@ write.table(panaroo_sig_c_met_nonclonal, file="pv_all.tsv", sep="\t")
 
 # non-clonal & livestock
 panaroo_sig_c_met_nonclonal_bps <- panaroo_sig_c_met_nonclonal %>%
-  filter(Source.Host != "Human")
+  filter(tolower(Source.Host) != "human")
 write.table(panaroo_sig_c_met_nonclonal_bps, file="pv_bps.tsv", sep="\t")
 
 # human vs non human
 panaroo_sig_c_met_nonclonal_human <- panaroo_sig_c_met_nonclonal  %>%
-  mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
+  mutate(Source.Host = if_else(!(tolower(Source.Host) %in% c("human")), "Livestock", Source.Host))
 write.table(panaroo_sig_c_met_nonclonal_human, file="pv_human.tsv", sep="\t")

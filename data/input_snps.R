@@ -57,10 +57,10 @@ write.table(snp_abudance_nonclonal, file="snp_abudance_all.tsv", sep="\t")
 
 # Non clonal bps
 snp_abudance_nonclonal_bps <- snp_abudance_nonclonal %>%
-  filter(Source.Host != "Human")
+  filter(tolower(Source.Host) != "human")
 write.table(snp_abudance_nonclonal_bps, file="snp_abudance_bps.tsv", sep="\t")
 
 # Non clonal bps
 snp_abudance_nonclonal_human <- snp_abudance_nonclonal %>%
-  mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
+  mutate(Source.Host = if_else(!(tolower(Source.Host) %in% c("human")), "Livestock", Source.Host))
 write.table(snp_abudance_nonclonal_human, file="snp_abudance_human.tsv", sep="\t")

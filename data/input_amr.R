@@ -27,12 +27,12 @@ write.table(amr_gene_metadata_all, file="./amr_gene_all.tsv", sep="\t")
 
 # Only livestock assemblies 
 amr_gene_metadata_bps <- amr_gene_metadata_all %>% 
-  filter(Source.Host != "Human")
+  filter(tolower(Source.Host)!= "human")
 write.table(amr_gene_metadata_bps, file="./amr_gene_bps.tsv", sep="\t")
 
 # Human vs Non Human
 amr_gene_metadata_human <- amr_gene_metadata_all %>%  
-  mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
+  mutate(Source.Host = if_else(!(tolower(Source.Host) %in% c("human")), "Livestock", Source.Host))
 write.table(amr_gene_metadata_human, file="./amr_gene_human.tsv", sep="\t")
 
 ################## AMR ANTIBIOTIC CLASS DATASET #############################
@@ -47,10 +47,10 @@ write.table(amr_class_metadata_all, file="./amr_class_all.tsv", sep="\t")
 
 # Only livestock assemblies 
 amr_class_metadata_bps <- amr_class_metadata_all %>%
-  filter(Source.Host != "Human")
+  filter(tolower(Source.Host) != "human")
 write.table(amr_class_metadata_bps, file="./amr_class_bps.tsv", sep="\t")
 
 # Human vs Non Human
 amr_class_metadata_human <- amr_class_metadata_all %>%
-  mutate(Source.Host = if_else(!(Source.Host %in% c("Human")), "Livestock", Source.Host))
+  mutate(Source.Host = if_else(!(tolower(Source.Host) %in% c("human")), "Livestock", Source.Host))
 write.table(amr_class_metadata_human, file="./amr_class_human.tsv", sep="\t")
