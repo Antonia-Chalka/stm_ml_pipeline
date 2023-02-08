@@ -21,3 +21,56 @@ nextflow run pipeline_test.nf --assemblypath /mnt/f/5.additional_datasets/stm_us
     --snp_core_ref /mnt/f/3.pipeline_data/eb1_run/out_old/2.genomic_features/snp_core_out/core.ref.tab \
     --assembly_column="Filename" \
     -profile docker 
+
+
+# phage run
+nextflow run pipeline_dsl2.nf --assemblypath /mnt/f/Phages/models/phage_interaction_cleaned \
+    --hostdata /mnt/f/Phages/models/test.csv \
+    --prokka_ref /mnt/f/Phages/models/ecoli_trusted_uniprot.fasta \
+    --snp_ref /mnt/f/Phages/models/EC958.chr.fa \
+    --outdir /mnt/f/Phages/models/test_out \
+    --scoary_threshold 70 \
+    --scoary_gen_file ~/3.pipeline_data/stm_ml_pipeline-1/data/scoary_datagen_phage.R \
+    --scoarycutoff=0.05 \
+    --prokka_extra "--genus Escherichia" \
+    --assembly_column  "Isolate" \
+    --host_column "CHAP1" \
+    --as_ln_upr 6000000 \
+    --as_ln_lwr 4000000 \
+    --ctg_count 600 \
+    --largest_ctg 1 \
+    --n50 1 \
+    --gc_upr 99 \
+    --gc_lwr 1 \
+    -profile docker \
+    -resume
+
+#phage test
+
+
+
+# vesa run
+nextflow run pipeline_dsl2.nf --assemblypath /mnt/f/Other_Projects/Vesa_ecoli/model_in/fasta_in \
+    --hostdata /mnt/f/Other_Projects/Vesa_ecoli/model_in/urban_zoo_metadata_datprepped_clean.csv \
+    --prokka_ref /mnt/f/Other_Projects/Vesa_ecoli/model_in/ecoli_trusted_uniprot.fasta \
+    --snp_ref /mnt/f/Other_Projects/Vesa_ecoli/model_in/EC958.chr.fa \
+    --outdir /mnt/f/Other_Projects/Vesa_ecoli/model_out \
+    --scoarycutoff=0.05 \
+    --assembly_column="sample_name" \
+    --host_column="Source_Level1" \
+    --region_column="Sublocation" \
+    --year_collection="Year" \
+    --amr_species="Escherichia" \
+    --prokka_extra "--genus Escherichia" \
+    --as_ln_upr 6000000 \
+    --as_ln_lwr 4000000 \
+    --ctg_count 500 \
+    --largest_ctg 1 \
+    --n50 1 \
+    --gc_upr 99 \
+    --gc_lwr 1 \
+    -profile docker \
+    -resume
+
+
+

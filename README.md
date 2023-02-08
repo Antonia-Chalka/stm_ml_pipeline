@@ -2,9 +2,7 @@
 
 A DSL2 Nextflow & Docker pipeline used to build bacterial source attribution machine learning models from assembled genomes, using SNPs, protein variants (PVs), intergenic regions (IGRs) and AMR profiles. Currently, it has only been tested for *Salmonella typhimurium* sequences.
 
-As used in:
-
-TODO Add citation
+[PUBLICATION PENDING]
 
 ## Contents
 
@@ -43,7 +41,7 @@ TODO Add citation
       docker pull rocker/tidyverse:4.0.5 ;
       docker pull quay.io/biocontainers/scoary:1.6.16--py_2 ;
       docker pull staphb/snp-dists:0.8.2 ;
-      docker pull annitachalka/r_model_build:1.01 ;
+      docker pull annitachalka/r_model_build:1.03 ;
       docker pull ncbi/blast:2.12.0 ;
       docker pull staphb/seqtk:1.3 
       ```
@@ -60,7 +58,7 @@ TODO Add citation
     singularity pull docker://rocker/tidyverse:4.0.5 ; 
     singularity pull docker://quay.io/biocontainers/scoary:1.6.16--py_2 ; 
     singularity pull docker://staphb/snp-dists:0.8.2 ; 
-    singularity pull docker://annitachalka/r_model_build:1.01
+    singularity pull docker://annitachalka/r_model_build:1.03
     singularity pull docker://ncbi/blast:2.12.0
     singularity pull docker://ncbi/staphb/seqtk:1.3
     ```
@@ -390,12 +388,8 @@ CPU hours   : 3.7
 Succeeded   : 80
 ```
 
-TODO update when u fix test dataset issue
-
-**Large Dataset (~5k STm sequences):**
-
-TODO add benchmarks for big dataset
+Large datasets (eg 5k+ STm sequences) will take several days to run.
 
 ## Citation
 
-TODO ADD CITATION
+[PUBLICATION PENDING]
