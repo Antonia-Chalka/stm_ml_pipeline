@@ -1,4 +1,25 @@
 # To build models from test data (model_build_in)
+nextflow run pipeline_dsl2_subworkflow.nf \
+    --assemblypath /home/annita/3.pipeline_data/stm_ml_pipeline-1/test_data/model_build_in \
+    --hostdata /home/annita/3.pipeline_data/stm_ml_pipeline-1/test_data/model_build_in/metadata.csv \
+    --outdir /home/annita/3.pipeline_data/stm_ml_pipeline-1/test_data/model_build_out \
+    --year_collected="Year" \
+    --scoarycutoff=0.05 \
+    --prokka_extra "--genus Enterococcus" \
+    -profile docker \
+    -resume
+
+# Use test data dn only get genomic features that do not require you have the entire dataset
+nextflow run pipeline_dsl2_subworkflow.nf \
+    --assemblypath /home/annita/3.pipeline_data/stm_ml_pipeline-1/test_data/model_build_in \
+    --hostdata /home/annita/3.pipeline_data/stm_ml_pipeline-1/test_data/model_build_in/metadata.csv \
+    --outdir /home/annita/3.pipeline_data/stm_ml_pipeline-1/test_data/model_build_out \
+    --year_collected="Year" \
+    --scoarycutoff=0.05 \
+    --prokka_extra "--genus Enterococcus" \
+    -profile docker \
+    -entry single_seq_operations
+
 
 # tro test with default dataset
 

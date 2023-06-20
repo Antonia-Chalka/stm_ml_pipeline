@@ -153,6 +153,7 @@ workflow multi_seq_operations {
     take: 
         good_assemblies_list // printqc.out.good_assemblies_list 
         good_metadata //printqc.out.good_metadata
+<<<<<<< HEAD
         annotation// TODO how to make it take a dir as an aletrnative? //prokka_annotation.out.annotation.collect()
         snippy //snippy.out.collect()
     main:
@@ -167,10 +168,27 @@ workflow multi_seq_operations {
 
         snippy_core(
         snippy, 
+=======
+        annnotation// TODO how to make it take a dir as an aletrnative? //prokka_annotation.out.annotation.collect()
+        snippy //snippy.out.collect()
+    main:
+        gen_scoary_traitfile(
+            printqc.out.good_metadata, // change to input metadata file
+            scoary_datagen_file)
+
+        panaroo(prokka_annotation.out.annotation.collect())  // from prokka
+        piggy(
+            prokka_annotation.out.annotation.collect(),  //from prokka
+            panaroo.out.roary_dir)
+
+        snippy_core(
+        snippy.out.collect(), 
+>>>>>>> 34a47416a03aa71a06c48d34dc048457c0fee6b9
         snp_ref_file)
         snp_dists(snippy_core.out.aligned_snps)
         clonal_detection(
             clonal_detection_script, 
+<<<<<<< HEAD
             good_metadata, 
             snp_dists.out)
         clonal_filtering(
@@ -179,6 +197,15 @@ workflow multi_seq_operations {
             good_metadata) //change to input metadat file
     emit:
         scoary_traitfile = gen_scoary_traitfile.out
+=======
+            printqc.out.good_metadata, 
+            snp_dists.out)
+        clonal_filtering(
+            clonal_detection.out.clusters, 
+            printqc.out.good_assemblies_list, // change to input custom good assemblies file (?)
+            printqc.out.good_metadata) //change to input metadat file
+    emit:
+>>>>>>> 34a47416a03aa71a06c48d34dc048457c0fee6b9
         pv_csv = panaroo.out.pv_csv
         pv_rtab = panaroo.out.pv_rtab
         pv_ref = panaroo.out.pv_ref
@@ -202,13 +229,19 @@ workflow phylogeny {
 
 workflow filtering {
     take:
+<<<<<<< HEAD
         scoary_traitfile // gen_scoary_traitfile.out
+=======
+>>>>>>> 34a47416a03aa71a06c48d34dc048457c0fee6b9
         amrfinder // amrfinder.out.collect()
         pv_csv //panaroo.out.pv_csv
         pv_rtab //panaroo.out.pv_rtab
         pv_ref //panaroo.out.pv_ref
         piggy_csv //piggy.out.piggy_csv
+<<<<<<< HEAD
         piggy_rtab // piggy.out.piggy_rtab
+=======
+>>>>>>> 34a47416a03aa71a06c48d34dc048457c0fee6b9
         piggy_ref //piggy.out.piggy_ref
         core_snps //snippy_core.out.core_snps
         clonal_filtering_out //clonal_filtering.out
@@ -216,6 +249,7 @@ workflow filtering {
     // with/without tree
     // pv igr snp
         scoary_pv(
+<<<<<<< HEAD
             scoary_traitfile, 
             pv_csv)
         scoary_igr(
@@ -248,6 +282,40 @@ workflow filtering {
         get_pv_fastas(
             pv_process.out.pv_all,
             pv_ref)
+=======
+            gen_scoary_traitfile.out, 
+            panaroo.out.pv_csv)
+        scoary_igr(
+            gen_scoary_traitfile.out, 
+            piggy.out.piggy_csv)
+
+        amr_collect(amrfinder.out.collect())
+        amr_process(
+            amr_process_script, 
+            amr_collect.out, 
+            clonal_filtering.out)
+        igr_process(
+            igr_process_script, 
+            piggy.out.piggy_rtab, 
+            scoary_igr.out, 
+            clonal_filtering.out)
+        pv_process(
+            pv_process_script, 
+            panaroo.out.pv_rtab, 
+            scoary_pv.out, 
+            clonal_filtering.out)
+        snp_process(
+            snps_process_script, 
+            snippy_core.out.core_snps,
+            clonal_filtering.out)
+
+        get_igr_fastas(
+            igr_process.out.igr_all, 
+            piggy.out.piggy_ref)
+        get_pv_fastas(
+            pv_process.out.pv_all,
+            panaroo.out.pv_ref)
+>>>>>>> 34a47416a03aa71a06c48d34dc048457c0fee6b9
 
     emit:
         amr_process_out = amr_process.out.amr_inputs.flatten()
@@ -270,6 +338,7 @@ workflow model_training {
     // shap values?
     model_building_amr( 
         model_building_script,
+<<<<<<< HEAD
         amr_process_out)
     model_building_pv( 
         model_building_script,
@@ -280,12 +349,25 @@ workflow model_training {
     model_building_snp( 
         model_building_script,
         snp_process_out)
+=======
+        amr_process.out.amr_inputs.flatten())
+    model_building_pv( 
+        model_building_script,
+        pv_process.out.pv_inputs.flatten())
+    model_building_igr( 
+        model_building_script,
+        igr_process.out.igr_inputs.flatten())
+    model_building_snp( 
+        model_building_script,
+        snp_process.out.snp_inputs.flatten())
+>>>>>>> 34a47416a03aa71a06c48d34dc048457c0fee6b9
 }
 
 workflow model_testing {
     // 
 }
 
+<<<<<<< HEAD
 
 workflow incomplete_dataset {
     single_seq_operations(assemblies, metadata_file)
@@ -315,14 +397,40 @@ workflow {
         multi_seq_operations.out.piggy_ref,
         multi_seq_operations.out.core_snps,
         multi_seq_operations.out.clonal_filtering_out
+=======
+workflow {
+    single_seq_operations(assemblies, metadata_file)
+    multi_seq_operations(
+        single_seq_operations.good_assemblies_list, //may need to change? wht happns if ffragemnted runs are run through?
+        single_seq_operations.good_metadata,
+        single_seq_operations.annnotation,
+        single_seq_operations.snippy
+        )
+    filtering(
+       multi_seq_operations.amrfinder 
+       multi_seq_operations.pv_csv 
+       multi_seq_operations.pv_rtab
+       multi_seq_operations.pv_ref
+       multi_seq_operations.piggy_csv
+       multi_seq_operations.piggy_ref
+       multi_seq_operations.core_snps
+       multi_seq_operations.clonal_filtering_out
+>>>>>>> 34a47416a03aa71a06c48d34dc048457c0fee6b9
     )
 
     // TODO if statement whether training or testing (default= "train" )
     model_training(
+<<<<<<< HEAD
         filtering.out.amr_process_out,
         filtering.out.pv_process_out,
         filtering.out.igr_process_out,
         filtering.out.snp_process_out
+=======
+        filtering.amr_process_out
+        filtering.pv_process_out
+        filtering.igr_process_out
+        filtering.snp_process_out
+>>>>>>> 34a47416a03aa71a06c48d34dc048457c0fee6b9
     )
 }
 
