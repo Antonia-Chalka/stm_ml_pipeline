@@ -18,10 +18,58 @@ nextflow run pipeline_dsl2_subworkflow.nf \
     --scoarycutoff=0.05 \
     --prokka_extra "--genus Enterococcus" \
     -profile docker \
-    -entry single_seq_operations
+    -entry incomplete_dataset \
+    -resume
+
+    # June analysis
+nextflow run pipeline_dsl2_subworkflow.nf \
+    --assemblypath /mnt/i/june_analysis/assemblies \
+    --hostdata /mnt/i/june_analysis/additional_june.csv \
+    --outdir //mnt/i/june_analysis/assemblies/out \
+    --assembly_column "Filename" \
+    --host_column "Source Type" \
+    --year_collection "Collection Year" \
+    --scoarycutoff=0.05 \
+    --prokka_extra "--genus Enterococcus" \
+    -profile docker \
+    -entry incomplete_dataset \
+    -resume
+
+#
+nextflow run pipeline_dsl2_subworkflow.nf \
+    --assemblypath /mnt/i/final_analysis/1.assemblies_in \
+    --prokka_ref /mnt/i/final_analysis/ecoli_trusted_uniprot.fasta  \   
+    --snp_ref /mnt/i/final_analysis/EC958_SNIPPYREF.chr.fa   \  
+    --hostdata /mnt/i/final_analysis/1.ecoli_met.csv     \
+    --outdir /mnt/i/final_analysis/2.pipeline_out     \
+    --assembly_column "Filename"     \
+    --host_column "Host"     \
+    --year_collected "Collection Year"     \
+    --scoarycutoff=0.05     \
+    --prokka_extra "--genus Enterococcus"     \
+    -profile docker     \
+    -entry feature_create     \
+    -resume
+
 
 
 # tro test with default dataset
+nextflow run pipeline_dsl2_subworkflow.nf \
+    --assemblypath /mnt/i/final_analysis/1.assemblies_in \
+    --prokka_ref /mnt/i/final_analysis/ecoli_trusted_uniprot.fasta \
+    --snp_ref /mnt/i/final_analysis/EC958_SNIPPYREF.chr.fa \
+    --hostdata /mnt/i/final_analysis/1.ecoli_met.csv \
+    --outdir /mnt/i/final_analysis/2.pipeline_out \
+    --assembly_column "Filename" \
+    --host_column "Host" \
+    --year_collected "Collection Year" \
+    --scoarycutoff=0.05 \
+    --prokka_extra "--genus Enterococcus" \
+    -profile docker \
+    -entry feature_create \
+    -resume
+    
+
 
 
 # EB1 Build

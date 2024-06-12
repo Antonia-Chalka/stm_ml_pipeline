@@ -25,7 +25,8 @@ process printqc {
 
     # Create list from good assemblies & create a new metadata file of the filtered results
     ls *.${params.fileextension} > good_assemblies.txt
-    awk -F',' 'NR==FNR{c[\$1]++;next};c[\$1] > 0' good_assemblies.txt $metadata_file > good_metadata.csv
+    while IFS= read -r line; do     grep -F "\$line" $metadata_file >> good_metadata.csv; done < good_assemblies.txt
+
     # Add headers to new metadata file by copying the first line of the orginal metadata file
     printf '%s\n' '0r !head -n 1 $metadata_file' x | ex good_metadata.csv 
 

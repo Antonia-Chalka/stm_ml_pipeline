@@ -12,6 +12,6 @@ process gen_scoary_traitfile {
 
     script:
     """
-    Rscript --vanilla $scoary_datagen_file $metadata $params.assembly_column $params.host_column
+    Rscript --vanilla $scoary_datagen_file "$metadata" "$params.assembly_column" "$params.host_column"
     """
 }

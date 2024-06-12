@@ -17,6 +17,6 @@ process clonal_detection {
     script:
     """
     touch empty.list
-    Rscript --vanilla $clonal_detection_script $snp_dist_file $metadata $params.assembly_column $params.host_column $params.year_collected $params.region_column $params.snp_dist_threshold
+    Rscript --vanilla $clonal_detection_script $snp_dist_file "$metadata" "$params.assembly_column" "$params.host_column" "$params.year_collected" "$params.region_column" $params.snp_dist_threshold
     """
 }

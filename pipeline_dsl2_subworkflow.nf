@@ -133,10 +133,10 @@ workflow single_seq_operations {
         prokka_annotation(
             printqc.out.good_assemblies.flatten(), 
             prokka_ref_file)
-        amrfinder(
-            prokka_annotation.out.annotation, 
-            prokka_annotation.out.transl_protein,
-            prokka_annotation.out.nucleotide)
+        // amrfinder(
+        //     prokka_annotation.out.annotation, 
+        //     prokka_annotation.out.transl_protein,
+        //     prokka_annotation.out.nucleotide)
         snippy(
             printqc.out.good_assemblies.flatten(), 
             snp_ref_file)
@@ -144,7 +144,7 @@ workflow single_seq_operations {
         good_assemblies_list = printqc.out.good_assemblies_list 
         good_metadata = printqc.out.good_metadata
         annnotation = prokka_annotation.out.annotation.collect()
-        amrfinder = amrfinder.out.collect()
+        //amrfinder = amrfinder.out.collect()
         snippy = snippy.out.collect()
 }
 
@@ -160,10 +160,10 @@ workflow multi_seq_operations {
             good_metadata, // change to input metadata file
             scoary_datagen_file)
 
-        panaroo(annotation)  // from prokka
-        piggy(
-            annotation,  //from prokka
-            panaroo.out.roary_dir)
+        // panaroo(annotation)  // from prokka
+        // piggy(
+        //     annotation,  //from prokka
+        //     panaroo.out.roary_dir)
 
         snippy_core(
         snippy, 
@@ -179,12 +179,12 @@ workflow multi_seq_operations {
             good_metadata) //change to input metadat file
     emit:
         scoary_traitfile = gen_scoary_traitfile.out
-        pv_csv = panaroo.out.pv_csv
-        pv_rtab = panaroo.out.pv_rtab
-        pv_ref = panaroo.out.pv_ref
-        piggy_csv = piggy.out.piggy_csv
-        piggy_rtab = piggy.out.piggy_rtab
-        piggy_ref = piggy.out.piggy_ref
+        // pv_csv = panaroo.out.pv_csv
+        // pv_rtab = panaroo.out.pv_rtab
+        // pv_ref = panaroo.out.pv_ref
+        // piggy_csv = piggy.out.piggy_csv
+        // piggy_rtab = piggy.out.piggy_rtab
+        // piggy_ref = piggy.out.piggy_ref
         core_snps = snippy_core.out.core_snps
         clonal_filtering_out = clonal_filtering.out
 }
@@ -203,56 +203,56 @@ workflow phylogeny {
 workflow filtering {
     take:
         scoary_traitfile // gen_scoary_traitfile.out
-        amrfinder // amrfinder.out.collect()
-        pv_csv //panaroo.out.pv_csv
-        pv_rtab //panaroo.out.pv_rtab
-        pv_ref //panaroo.out.pv_ref
-        piggy_csv //piggy.out.piggy_csv
-        piggy_rtab // piggy.out.piggy_rtab
-        piggy_ref //piggy.out.piggy_ref
+        //amrfinder // amrfinder.out.collect()
+        // pv_csv //panaroo.out.pv_csv
+        // pv_rtab //panaroo.out.pv_rtab
+        // pv_ref //panaroo.out.pv_ref
+        // piggy_csv //piggy.out.piggy_csv
+        // piggy_rtab // piggy.out.piggy_rtab
+        // piggy_ref //piggy.out.piggy_ref
         core_snps //snippy_core.out.core_snps
         clonal_filtering_out //clonal_filtering.out
     main:
     // with/without tree
     // pv igr snp
-        scoary_pv(
-            scoary_traitfile, 
-            pv_csv)
-        scoary_igr(
-            scoary_traitfile, 
-            piggy_csv)
+        // scoary_pv(
+        //     scoary_traitfile, 
+        //     pv_csv)
+        // scoary_igr(
+        //     scoary_traitfile, 
+        //     piggy_csv)
 
-        amr_collect(amrfinder)
-        amr_process(
-            amr_process_script, 
-            amr_collect.out, 
-            clonal_filtering_out)
-        igr_process(
-            igr_process_script, 
-            piggy_rtab, 
-            scoary_igr.out, 
-            clonal_filtering_out)
-        pv_process(
-            pv_process_script, 
-            pv_rtab, 
-            scoary_pv.out, 
-            clonal_filtering_out)
+        //amr_collect(amrfinder)
+        // amr_process(
+        //     amr_process_script, 
+        //     amr_collect.out, 
+        //     clonal_filtering_out)
+        // igr_process(
+        //     igr_process_script, 
+        //     piggy_rtab, 
+        //     scoary_igr.out, 
+        //     clonal_filtering_out)
+        // pv_process(
+        //     pv_process_script, 
+        //     pv_rtab, 
+        //     scoary_pv.out, 
+        //     clonal_filtering_out)
         snp_process(
             snps_process_script, 
             core_snps,
             clonal_filtering_out)
 
-        get_igr_fastas(
-            igr_process.out.igr_all, 
-            piggy_ref)
-        get_pv_fastas(
-            pv_process.out.pv_all,
-            pv_ref)
+        // get_igr_fastas(
+        //     igr_process.out.igr_all, 
+        //     piggy_ref)
+        // get_pv_fastas(
+        //     pv_process.out.pv_all,
+        //     pv_ref)
 
     emit:
-        amr_process_out = amr_process.out.amr_inputs.flatten()
-        pv_process_out = pv_process.out.pv_inputs.flatten()
-        igr_process_out = igr_process.out.igr_inputs.flatten()
+       // amr_process_out = amr_process.out.amr_inputs.flatten()
+        // pv_process_out = pv_process.out.pv_inputs.flatten()
+        // igr_process_out = igr_process.out.igr_inputs.flatten()
         snp_process_out = snp_process.out.snp_inputs.flatten()
 }
 
@@ -284,6 +284,29 @@ workflow model_training {
 
 workflow model_testing {
     // 
+}
+
+workflow feature_create {
+    single_seq_operations(assemblies, metadata_file)
+    multi_seq_operations(
+        single_seq_operations.out.good_assemblies_list, //may need to change? wht happns if ffragemnted runs are run through?
+        single_seq_operations.out.good_metadata,
+        single_seq_operations.out.annnotation,
+        single_seq_operations.out.snippy
+        )
+    filtering(
+        // multi_seq_operations.out.scoary_traitfile,
+        //single_seq_operations.out.amrfinder,
+        // multi_seq_operations.out.pv_csv,
+        // multi_seq_operations.out.pv_rtab,
+        // multi_seq_operations.out.pv_ref,
+        // multi_seq_operations.out.piggy_csv,
+        // multi_seq_operations.out.piggy_rtab,
+        // multi_seq_operations.out.piggy_ref,
+        multi_seq_operations.out.core_snps,
+        multi_seq_operations.out.clonal_filtering_out
+    )
+
 }
 
 

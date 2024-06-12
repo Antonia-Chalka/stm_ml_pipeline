@@ -11,7 +11,7 @@ if (length(args)!=7) {
 
 ########################### Input Data  ###########################
 snpdist_base <- read.table(args[1],sep="\t")
-metadata <- read.csv(args[2]) %>% 
+metadata <- read.csv(args[2],check.names = FALSE) %>% 
   rename(Filename=args[3],Source.Host=args[4],Collection.Year=args[5],Region=args[6]) %>% 
   select(Region,Source.Host,Collection.Year,Filename)
 ########################### Find clonal copies ###########################
