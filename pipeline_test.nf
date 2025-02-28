@@ -39,29 +39,29 @@ if (params.help) {
 }
 
 // Modules 
-include { assembly_qc                           } from "$projectDir/modules/assembly_qc.nf"
-include { printqc                               } from "$projectDir/modules/printqc.nf"
-include { prokka_annotation                     } from "$projectDir/modules/prokka_annotation.nf"
-include { amrfinder                             } from "$projectDir/modules/amrfinder.nf"
-include { snippy                                } from "$projectDir/modules/snippy.nf"
-include { snippy_core                           } from "$projectDir/modules/snippy_core.nf"
-include { amr_collect                           } from "$projectDir/modules/amr_collect.nf"  
-include { get_igr_fastas                        } from "$projectDir/modules/get_igr_fastas.nf"
-include { get_pv_fastas                         } from "$projectDir/modules/get_pv_fastas.nf"
-include { makeblastdb                           } from "$projectDir/modules/makeblastdb.nf"
-include { blast as blast_pvs                    } from "$projectDir/modules/blast.nf"
-include { blast as blast_igrs                   } from "$projectDir/modules/blast.nf"
-include { amr_process_test                      } from "$projectDir/modules/amr_process_test.nf"
-include { snp_process_test                      } from "$projectDir/modules/snp_process_test.nf"
-include { blast_process as blast_process_pv     } from "$projectDir/modules/blast_process.nf"
-include { blast_process as blast_process_igr    } from "$projectDir/modules/blast_process.nf"
-include { prediction_testing_models             } from "$projectDir/modules/prediction_testing_models"
+include { assembly_qc                           } from "$projectDir/scripts/modules/assembly_qc.nf"
+include { printqc                               } from "$projectDir/scripts/modules/printqc.nf"
+include { prokka_annotation                     } from "$projectDir/scripts/modules/prokka_annotation.nf"
+include { amrfinder                             } from "$projectDir/scripts/modules/amrfinder.nf"
+include { snippy                                } from "$projectDir/scripts/modules/snippy.nf"
+include { snippy_core                           } from "$projectDir/scripts/modules/snippy_core.nf"
+include { amr_collect                           } from "$projectDir/scripts/modules/amr_collect.nf"  
+include { get_igr_fastas                        } from "$projectDir/scripts/modules/get_igr_fastas.nf"
+include { get_pv_fastas                         } from "$projectDir/scripts/modules/get_pv_fastas.nf"
+include { makeblastdb                           } from "$projectDir/scripts/modules/makeblastdb.nf"
+include { blast as blast_pvs                    } from "$projectDir/scripts/modules/blast.nf"
+include { blast as blast_igrs                   } from "$projectDir/scripts/modules/blast.nf"
+include { amr_process_test                      } from "$projectDir/scripts/modules/amr_process_test.nf"
+include { snp_process_test                      } from "$projectDir/scripts/modules/snp_process_test.nf"
+include { blast_process as blast_process_pv     } from "$projectDir/scripts/modules/blast_process.nf"
+include { blast_process as blast_process_igr    } from "$projectDir/scripts/modules/blast_process.nf"
+include { prediction_testing_models             } from "$projectDir/scripts/modules/prediction_testing_models"
 
 // R script & reference files
-amr_process_script = file("$projectDir/data/input_amr_testing.R")
-snps_process_script = file("$projectDir/data/input_snps_testing.R")
-blast_process_script = file("$projectDir/data/blast_process.R")
-prediction_testing_models_script = file ("$projectDir/data/prediction_testing_models.R")
+amr_process_script = file("$projectDir/scripts/R_scripts/input_amr_testing.R")
+snps_process_script = file("$projectDir/scripts/R_scripts/input_snps_testing.R")
+blast_process_script = file("$projectDir/scripts/R_scripts/blast_process.R")
+prediction_testing_models_script = file ("$projectDir/scripts/R_scripts/prediction_testing_models.R")
 
 pv_fasta_file = file(params.pv_fasta)
 igr_fasta_file = file(params.igr_fasta)

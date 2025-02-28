@@ -49,7 +49,7 @@ def helpMessage() {
     Nextflow Options
         profile                         Run with docker or singularity (options are docker or singularity)
 
-    If you wish to alter the scripts used to generate the models, simply edit the appropriate 'model_building' R scripts in ./data/ - ONLY DO SO IF YOU KNOW WHAT YOU ARE DOING
+    If you wish to alter the scripts used to generate the models, simply edit the appropriate 'model_building' R scripts in ./scripts/R_scripts - ONLY DO SO IF YOU KNOW WHAT YOU ARE DOING
     """
 }
 
@@ -61,44 +61,44 @@ if (params.help) {
 
 ////////////////////////////////////////////// MODULES, REFERENCES & SCRIPT FILES //////////////////////////////////////////////
 // Modules 
-include { assembly_qc                                   } from "$projectDir/modules/assembly_qc.nf"
-include { printqc                                       } from "$projectDir/modules/printqc.nf"
-include { prokka_annotation                             } from "$projectDir/modules/prokka_annotation.nf"
-include { amrfinder                                     } from "$projectDir/modules/amrfinder.nf"
-include { gen_scoary_traitfile                          } from "$projectDir/modules/gen_scoary_traitfile.nf"
-include { panaroo                                       } from "$projectDir/modules/panaroo.nf"
-include { piggy                                         } from "$projectDir/modules/piggy.nf"
-include { scoary_pv                                     } from "$projectDir/modules/scoary_pv.nf"
-include { scoary_igr                                    } from "$projectDir/modules/scoary_igr.nf"
-include { snippy                                        } from "$projectDir/modules/snippy.nf"
-include { snippy_core                                   } from "$projectDir/modules/snippy_core.nf"
-include { snp_dists                                     } from "$projectDir/modules/snp_dists.nf"
-include { clonal_detection                              } from "$projectDir/modules/clonal_detection.nf"
-include { clonal_filtering                              } from "$projectDir/modules/clonal_filtering.nf"
-include { amr_collect                                   } from "$projectDir/modules/amr_collect.nf"
-include { amr_process                                   } from "$projectDir/modules/amr_process.nf"
-include { igr_process                                   } from "$projectDir/modules/igr_process.nf"
-include { pv_process                                    } from "$projectDir/modules/pv_process.nf"
-include { snp_process                                   } from "$projectDir/modules/snp_process.nf"
-include { model_building as model_building_amr          } from "$projectDir/modules/model_building.nf"
-include { model_building as model_building_pv           } from "$projectDir/modules/model_building.nf"
-include { model_building as model_building_igr          } from "$projectDir/modules/model_building.nf"
-include { model_building as model_building_snp          } from "$projectDir/modules/model_building.nf"
-include { get_igr_fastas                                } from "$projectDir/modules/get_igr_fastas.nf"
-include { get_pv_fastas                                 } from "$projectDir/modules/get_pv_fastas.nf"
+include { assembly_qc                                   } from "$projectDir/scripts/modules/assembly_qc.nf"
+include { printqc                                       } from "$projectDir/scripts/modules/printqc.nf"
+include { prokka_annotation                             } from "$projectDir/scripts/modules/prokka_annotation.nf"
+include { amrfinder                                     } from "$projectDir/scripts/modules/amrfinder.nf"
+include { gen_scoary_traitfile                          } from "$projectDir/scripts/modules/gen_scoary_traitfile.nf"
+include { panaroo                                       } from "$projectDir/scripts/modules/panaroo.nf"
+include { piggy                                         } from "$projectDir/scripts/modules/piggy.nf"
+include { scoary_pv                                     } from "$projectDir/scripts/modules/scoary_pv.nf"
+include { scoary_igr                                    } from "$projectDir/scripts/modules/scoary_igr.nf"
+include { snippy                                        } from "$projectDir/scripts/modules/snippy.nf"
+include { snippy_core                                   } from "$projectDir/scripts/modules/snippy_core.nf"
+include { snp_dists                                     } from "$projectDir/scripts/modules/snp_dists.nf"
+include { clonal_detection                              } from "$projectDir/scripts/modules/clonal_detection.nf"
+include { clonal_filtering                              } from "$projectDir/scripts/modules/clonal_filtering.nf"
+include { amr_collect                                   } from "$projectDir/scripts/modules/amr_collect.nf"
+include { amr_process                                   } from "$projectDir/scripts/modules/amr_process.nf"
+include { igr_process                                   } from "$projectDir/scripts/modules/igr_process.nf"
+include { pv_process                                    } from "$projectDir/scripts/modules/pv_process.nf"
+include { snp_process                                   } from "$projectDir/scripts/modules/snp_process.nf"
+include { model_building as model_building_amr          } from "$projectDir/scripts/modules/model_building.nf"
+include { model_building as model_building_pv           } from "$projectDir/scripts/modules/model_building.nf"
+include { model_building as model_building_igr          } from "$projectDir/scripts/modules/model_building.nf"
+include { model_building as model_building_snp          } from "$projectDir/scripts/modules/model_building.nf"
+include { get_igr_fastas                                } from "$projectDir/scripts/modules/get_igr_fastas.nf"
+include { get_pv_fastas                                 } from "$projectDir/scripts/modules/get_pv_fastas.nf"
 
 // Reference files
 prokka_ref_file = file(params.prokka_ref)
 snp_ref_file = file(params.snp_ref)
 
 // R script files
-scoary_datagen_file=file("$projectDir/data/scoary_generate_tabfile.R")
-clonal_detection_script=file("$projectDir/data/filter_script.R")
-amr_process_script=file("$projectDir/data/input_amr.R")
-pv_process_script=file("$projectDir/data/input_pv.R")
-igr_process_script=file("$projectDir/data/input_igr.R")
-snps_process_script=file("$projectDir/data/input_snps.R")
-model_building_script=file("$projectDir/data/single_model_build.R")
+scoary_datagen_file=file("$projectDir/scripts/R_scripts/scoary_generate_tabfile.R")
+clonal_detection_script=file("$projectDir/scripts/R_scripts/filter_script.R")
+amr_process_script=file("$projectDir/scripts/R_scripts/input_amr.R")
+pv_process_script=file("$projectDir/scripts/R_scripts/input_pv.R")
+igr_process_script=file("$projectDir/scripts/R_scripts/input_igr.R")
+snps_process_script=file("$projectDir/scripts/R_scripts/input_snps.R")
+model_building_script=file("$projectDir/scripts/R_scripts/single_model_build.R")
 
 //////////////////////////////////////////////     WORKFLOW    //////////////////////////////////////////////
 assemblies = Channel.fromPath("${params.assemblypath}/*.${params.fileextension}")
