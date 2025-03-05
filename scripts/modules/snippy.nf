@@ -1,4 +1,5 @@
 process snippy {
+    publishDir  "${params.outdir}/2.genomic_features/snippy_single_out", mode: 'copy', overwrite: true
     cache 'lenient'
 
     input:
